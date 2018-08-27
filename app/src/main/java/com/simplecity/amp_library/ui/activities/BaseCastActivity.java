@@ -9,47 +9,39 @@ import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumer;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
 import com.simplecity.amp_library.ShuttleApplication;
-import com.simplecity.amp_library.utils.ShuttleUtils;
 
 public abstract class BaseCastActivity extends BaseActivity {
 
     private static final String TAG = "BaseCastActivity";
 
-    public VideoCastManager mCastManager;
-    private VideoCastConsumer mCastConsumer;
+    @NonNull
+    public VideoCastManager castManager = VideoCastManager.getInstance();
+
+    @NonNull
+    private VideoCastConsumer castConsumer = new VideoCastConsumerImpl() {
+        @Override
+        public void onConnectionSuspended(int cause) {
+            Log.d(TAG, "onConnectionSuspended() was called with cause: " + cause);
+            //Todo: Show toast
+        }
+
+        @Override
+        public void onConnectivityRecovered() {
+            //Todo: Show toast
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (ShuttleUtils.isUpgraded()) {
-            mCastManager = VideoCastManager.getInstance();
-        }
-
-        mCastConsumer = new VideoCastConsumerImpl() {
-            @Override
-            public void onConnectionSuspended(int cause) {
-                Log.d(TAG, "onConnectionSuspended() was called with cause: " + cause);
-                //Todo: Show toast
-            }
-
-            @Override
-            public void onConnectivityRecovered() {
-                //Todo: Show toast
-            }
-        };
-
-        if (mCastManager != null) {
-            mCastManager.reconnectSessionIfPossible();
-        }
+        castManager.reconnectSessionIfPossible();
     }
 
     @Override
     protected void onPause() {
 
-        if (mCastManager != null) {
-            mCastManager.removeVideoCastConsumer(mCastConsumer);
-        }
+        castManager.removeVideoCastConsumer(castConsumer);
 
         super.onPause();
     }
@@ -58,19 +50,14 @@ public abstract class BaseCastActivity extends BaseActivity {
     public void onResume() {
         super.onResume();
 
-        if (ShuttleUtils.isUpgraded()) {
-            mCastManager = VideoCastManager.getInstance();
-            mCastManager.addVideoCastConsumer(mCastConsumer);
-        }
+        castManager = VideoCastManager.getInstance();
+        castManager.addVideoCastConsumer(castConsumer);
     }
 
     @Override
     public boolean dispatchKeyEvent(@NonNull KeyEvent event) {
-        if (mCastManager != null) {
-            return mCastManager.onDispatchVolumeKeyEvent(event, ShuttleApplication.VOLUME_INCREMENT)
-                    || super.dispatchKeyEvent(event);
-        }
-        return super.dispatchKeyEvent(event);
+        return castManager.onDispatchVolumeKeyEvent(event, ShuttleApplication.VOLUME_INCREMENT)
+                || super.dispatchKeyEvent(event);
     }
 
 }

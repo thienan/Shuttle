@@ -1,30 +1,28 @@
 package com.simplecity.amp_library.utils;
 
-import com.annimon.stream.Collectors;
+import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
-import com.crashlytics.android.Crashlytics;
-import com.jakewharton.rxrelay.BehaviorRelay;
+import com.annimon.stream.function.Predicate;
+import com.jakewharton.rxrelay2.BehaviorRelay;
 import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.model.Album;
 import com.simplecity.amp_library.model.AlbumArtist;
-import com.simplecity.amp_library.model.BlacklistedSong;
 import com.simplecity.amp_library.model.Genre;
+import com.simplecity.amp_library.model.InclExclItem;
 import com.simplecity.amp_library.model.Playlist;
 import com.simplecity.amp_library.model.Song;
-import com.simplecity.amp_library.model.WhitelistFolder;
-import com.simplecity.amp_library.sql.databases.BlacklistDbOpenHelper;
-import com.simplecity.amp_library.sql.databases.WhitelistDbOpenHelper;
+import com.simplecity.amp_library.sql.databases.InclExclDbOpenHelper;
 import com.simplecity.amp_library.sql.sqlbrite.SqlBriteUtils;
-import com.squareup.sqlbrite.BriteDatabase;
-import com.squareup.sqlbrite.SqlBrite;
+import com.squareup.sqlbrite2.BriteDatabase;
+import com.squareup.sqlbrite2.SqlBrite;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import rx.Observable;
-import rx.Subscription;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class DataManager {
 
@@ -32,28 +30,34 @@ public class DataManager {
 
     private static DataManager instance;
 
-    private Subscription songsSubscription;
+    private Disposable songsSubscription;
     private BehaviorRelay<List<Song>> songsRelay = BehaviorRelay.create();
 
-    private Subscription albumsSubscription;
+    private Disposable allSongsSubscription;
+    private BehaviorRelay<List<Song>> allSongsRelay = BehaviorRelay.create();
+
+    private Disposable albumsSubscription;
     private BehaviorRelay<List<Album>> albumsRelay = BehaviorRelay.create();
 
-    private Subscription albumArtistsSubscription;
+    private Disposable albumArtistsSubscription;
     private BehaviorRelay<List<AlbumArtist>> albumArtistsRelay = BehaviorRelay.create();
 
-    private Subscription genresSubscription;
+    private Disposable genresSubscription;
     private BehaviorRelay<List<Genre>> genresRelay = BehaviorRelay.create();
 
-    private Subscription playlistsSubscription;
+    private Disposable playlistsSubscription;
     private BehaviorRelay<List<Playlist>> playlistsRelay = BehaviorRelay.create();
 
-    private BriteDatabase blacklistDatabase;
-    private Subscription blacklistSubscription;
-    private BehaviorRelay<List<BlacklistedSong>> blacklistRelay = BehaviorRelay.create();
+    private Disposable favoriteSongsSubscription;
+    private BehaviorRelay<List<Song>> favoriteSongsRelay = BehaviorRelay.create();
 
-    private BriteDatabase whitelistDatabase;
-    private Subscription whitelistSubscription;
-    private BehaviorRelay<List<WhitelistFolder>> whitelistRelay = BehaviorRelay.create();
+    private BriteDatabase inclExclDatabase;
+
+    private Disposable inclSubscription;
+    private BehaviorRelay<List<InclExclItem>> inclRelay = BehaviorRelay.create();
+
+    private Disposable exclSubscription;
+    private BehaviorRelay<List<InclExclItem>> exclRelay = BehaviorRelay.create();
 
     public static DataManager getInstance() {
         if (instance == null) {
@@ -64,6 +68,15 @@ public class DataManager {
 
     private DataManager() {
 
+    }
+
+    public Observable<List<Song>> getAllSongsRelay() {
+        if (allSongsSubscription == null || allSongsSubscription.isDisposed()) {
+            allSongsSubscription = SqlBriteUtils.createObservableList(ShuttleApplication.getInstance(), Song::new, Song.getQuery()).subscribe(allSongsRelay, error -> LogUtils.logException(TAG, "getAllSongsRelay threw error", error));
+        }
+        return allSongsRelay
+                .subscribeOn(Schedulers.io())
+                .map(ArrayList::new);
     }
 
     /**
@@ -86,34 +99,35 @@ public class DataManager {
      */
     public Observable<List<Song>> getSongsRelay() {
 
-        if (songsSubscription == null || songsSubscription.isUnsubscribed()) {
+        if (songsSubscription == null || songsSubscription.isDisposed()) {
 
-            Observable<List<Song>> songsObservable = SqlBriteUtils.createContinuousQuery(ShuttleApplication.getInstance(), Song::new, Song.getQuery());
-
-            songsSubscription = Observable.combineLatest(songsObservable, getBlacklistRelay(), getWhitelistRelay(), (songs, blacklistedSongs, whitelistFolders) ->
+            songsSubscription = Observable.combineLatest(getAllSongsRelay(), getInclRelay(), getExclRelay(), (songs, inclItems, exclItems) ->
             {
                 List<Song> result = songs;
 
-                //Filter out blacklisted songs
-                if (!blacklistedSongs.isEmpty()) {
+                // Filter out excluded paths
+                if (!exclItems.isEmpty()) {
                     result = Stream.of(songs)
-                            .filter(song -> !Stream.of(blacklistedSongs)
-                                    .anyMatch(blacklistedSong -> blacklistedSong.songId == song.id))
-                            .collect(Collectors.toList());
+                            .filterNot(song -> Stream.of(exclItems)
+                                    .anyMatch(exclItem -> StringUtils.containsIgnoreCase(song.path, exclItem.path)))
+                            .toList();
                 }
 
-                //Filter out non-whitelisted folders
-                if (!whitelistFolders.isEmpty()) {
+                // Filter out non-included paths
+                if (!inclItems.isEmpty()) {
                     result = Stream.of(result)
-                            .filter(song -> Stream.of(whitelistFolders)
-                                    .anyMatch(whitelistFolder -> StringUtils.containsIgnoreCase(song.path, whitelistFolder.folder)))
-                            .collect(Collectors.toList());
+                            .filter(song -> Stream.of(inclItems)
+                                    .anyMatch(inclItem -> StringUtils.containsIgnoreCase(song.path, inclItem.path)))
+                            .toList();
                 }
 
                 return result;
-            }).subscribe(songsRelay, error -> Crashlytics.log("getSongsRelay error: " + error.getMessage()));
+            })
+                    .subscribe(songsRelay, error -> LogUtils.logException(TAG, "getSongsRelay threw error", error));
         }
-        return songsRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+        return songsRelay
+                .subscribeOn(Schedulers.io())
+                .map(ArrayList::new);
     }
 
     /**
@@ -136,10 +150,10 @@ public class DataManager {
      * {@link Schedulers#io()} {@code scheduler}.
      */
     public Observable<List<Album>> getAlbumsRelay() {
-        if (albumsSubscription == null || albumsSubscription.isUnsubscribed()) {
+        if (albumsSubscription == null || albumsSubscription.isDisposed()) {
             albumsSubscription = getSongsRelay()
                     .flatMap(songs -> Observable.just(Operators.songsToAlbums(songs)))
-                    .subscribe(albumsRelay, error -> Crashlytics.log("getAlbumsRelay error: " + error.getMessage()));
+                    .subscribe(albumsRelay, error -> LogUtils.logException(TAG, "getAlbumsRelay threw error: ", error));
         }
         return albumsRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
     }
@@ -164,10 +178,10 @@ public class DataManager {
      * {@link Schedulers#io()} {@code scheduler}.
      */
     public Observable<List<AlbumArtist>> getAlbumArtistsRelay() {
-        if (albumArtistsSubscription == null || albumArtistsSubscription.isUnsubscribed()) {
+        if (albumArtistsSubscription == null || albumArtistsSubscription.isDisposed()) {
             albumArtistsSubscription = getAlbumsRelay()
                     .flatMap(albums -> Observable.just(Operators.albumsToAlbumArtists(albums)))
-                    .subscribe(albumArtistsRelay,error -> Crashlytics.log("getAlbumArtistsRelay error: " + error.getMessage()));
+                    .subscribe(albumArtistsRelay, error -> LogUtils.logException(TAG, "getAlbumArtistsRelay threw error", error));
         }
         return albumArtistsRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
     }
@@ -191,19 +205,16 @@ public class DataManager {
      * {@link Schedulers#io()} {@code scheduler}.
      */
     public Observable<List<Genre>> getGenresRelay() {
-        if (genresSubscription == null || genresSubscription.isUnsubscribed()) {
-            genresSubscription = SqlBriteUtils.createContinuousQuery(ShuttleApplication.getInstance(), Genre::new, Genre.getQuery())
-                    .flatMap(genres -> Observable.from(genres)
-                            .flatMap(genre -> genre.getSongsObservable(ShuttleApplication.getInstance())
-                                    .filter(songs -> !songs.isEmpty())
-                                    .map(songs -> {
-                                        genre.numSongs = songs.size();
-                                        return genre;
-                                    }))
-                            .toList())
-                    .subscribe(genresRelay, error -> Crashlytics.log("getGenresRelay error: " + error.getMessage()));
+        if (genresSubscription == null || genresSubscription.isDisposed()) {
+            genresSubscription = SqlBriteUtils.createObservableList(ShuttleApplication.getInstance(), Genre::new, Genre.getQuery())
+                    .subscribe(genresRelay, error -> LogUtils.logException(TAG, "getGenresRelay threw error", error));
         }
+
         return genresRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+    }
+
+    public void updateGenresRelay(List<Genre> genres) {
+        genresRelay.accept(genres);
     }
 
     /**
@@ -225,70 +236,76 @@ public class DataManager {
      * {@link Schedulers#io()} {@code scheduler}.
      */
     public Observable<List<Playlist>> getPlaylistsRelay() {
-        if (playlistsSubscription == null || playlistsSubscription.isUnsubscribed()) {
-            playlistsSubscription = SqlBriteUtils.createContinuousQuery(ShuttleApplication.getInstance(), Playlist::new, Playlist.getQuery())
-                    .subscribe(playlistsRelay, error -> Crashlytics.log("getPlaylistRelay error: " + error.getMessage()));
+        if (playlistsSubscription == null || playlistsSubscription.isDisposed()) {
+            playlistsSubscription = SqlBriteUtils.createObservableList(ShuttleApplication.getInstance(), Playlist::new, Playlist.getQuery())
+                    .subscribe(playlistsRelay, error -> LogUtils.logException(TAG, "getPlaylistRelay threw error", error));
         }
         return playlistsRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
     }
 
+    public Observable<List<Song>> getFavoriteSongsRelay() {
+        if (favoriteSongsSubscription == null || favoriteSongsSubscription.isDisposed()) {
+            favoriteSongsSubscription = Playlist.favoritesPlaylist()
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .flatMapObservable(Playlist::getSongsObservable)
+                    .switchIfEmpty(Observable.just(Collections.emptyList()))
+                    .subscribe(favoriteSongsRelay, error -> LogUtils.logException(TAG, "getFavoriteSongsRelay threw error", error));
+        }
+        return favoriteSongsRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+    }
+
     /**
-     * Returns an Observable<List<Song>> from the songs relay, filtered by the passed in predicate.
-     * <p>
-     * This Observable is finite (it only emits once),
+     * Returns an {@link Observable<List>} from the songs relay, filtered by the passed in predicate.
      */
-    public Observable<List<Song>> getSongsObservable(Func1<Song, Boolean> predicate) {
+    public Observable<List<Song>> getSongsObservable(Predicate<Song> predicate) {
         return getSongsRelay()
-                .first()
-                .flatMap(Observable::from)
-                .filter(predicate).toList();
+                .map(songs -> Stream.of(songs)
+                        .filter(predicate)
+                        .toList());
     }
 
     /**
-     * @return a {@link BriteDatabase} wrapping the blacklist SqliteOpenHelper.
+     * @return a {@link BriteDatabase} wrapping the greylist SqliteOpenHelper.
      */
-    public BriteDatabase getBlacklistDatabase() {
-        if (blacklistDatabase == null) {
-            blacklistDatabase = new SqlBrite.Builder().build()
-                    .wrapDatabaseHelper(new BlacklistDbOpenHelper(ShuttleApplication.getInstance()), Schedulers.io());
+    public BriteDatabase getInclExclDatabase() {
+        if (inclExclDatabase == null) {
+            inclExclDatabase = new SqlBrite.Builder().build()
+                    .wrapDatabaseHelper(new InclExclDbOpenHelper(ShuttleApplication.getInstance()), Schedulers.io());
         }
-        return blacklistDatabase;
+        return inclExclDatabase;
+    }
+
+    public Observable<List<InclExclItem>> getIncludeItems() {
+        return DataManager.getInstance().getInclExclDatabase()
+                .createQuery(InclExclDbOpenHelper.TABLE_NAME, "SELECT * FROM " + InclExclDbOpenHelper.TABLE_NAME + " WHERE " + InclExclDbOpenHelper.COLUMN_TYPE + " = " + InclExclItem.Type.INCLUDE)
+                .mapToList(InclExclItem::new);
     }
 
     /**
-     * @return a <b>continuous</b> stream of {@link List<BlacklistedSong>>}, backed by a behavior relay for caching query results.
+     * @return a <b>continuous</b> stream of {@link List<InclExclItem>>} of type {@link InclExclItem.Type#INCLUDE} , backed by a behavior relay for caching query results.
      */
-    private Observable<List<BlacklistedSong>> getBlacklistRelay() {
-        if (blacklistSubscription == null || blacklistSubscription.isUnsubscribed()) {
-            blacklistSubscription = getBlacklistDatabase()
-                    .createQuery(BlacklistDbOpenHelper.TABLE_SONGS, "SELECT * FROM " + BlacklistDbOpenHelper.TABLE_SONGS)
-                    .mapToList(BlacklistedSong::new)
-                    .subscribe(blacklistRelay, error -> Crashlytics.log("getBlacklistRelay error: " + error.getMessage()));
+    private Observable<List<InclExclItem>> getInclRelay() {
+        if (inclSubscription == null || inclSubscription.isDisposed()) {
+            inclSubscription = getIncludeItems().subscribe(inclRelay, error -> LogUtils.logException(TAG, "getInclRelay threw error", error));
         }
-        return blacklistRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+        return inclRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+    }
+
+    public Observable<List<InclExclItem>> getExcludeItems() {
+        return DataManager.getInstance().getInclExclDatabase()
+                .createQuery(InclExclDbOpenHelper.TABLE_NAME, "SELECT * FROM " + InclExclDbOpenHelper.TABLE_NAME + " WHERE " + InclExclDbOpenHelper.COLUMN_TYPE + " = " + InclExclItem.Type.EXCLUDE)
+                .mapToList(InclExclItem::new);
     }
 
     /**
-     * @return a {@link BriteDatabase} wrapping the whitelist SqliteOpenHelper.
+     * @return a <b>continuous</b> stream of {@link List<InclExclItem>>} of type {@link InclExclItem.Type#EXCLUDE}, backed by a behavior relay for caching query results.
      */
-    public BriteDatabase getWhitelistDatabase() {
-        if (whitelistDatabase == null) {
-            whitelistDatabase = new SqlBrite.Builder().build()
-                    .wrapDatabaseHelper(new WhitelistDbOpenHelper(ShuttleApplication.getInstance()), Schedulers.io());
+    private Observable<List<InclExclItem>> getExclRelay() {
+        if (exclSubscription == null || exclSubscription.isDisposed()) {
+            exclSubscription = getExcludeItems()
+                    .subscribe(exclRelay, error -> LogUtils.logException(TAG, "getExclRelay threw error", error));
         }
-        return whitelistDatabase;
-    }
-
-    /**
-     * @return a <b>continuous</b> stream of {@link List<WhitelistFolder>>}, backed by a behavior relay for caching query results.
-     */
-    private Observable<List<WhitelistFolder>> getWhitelistRelay() {
-        if (whitelistSubscription == null || whitelistSubscription.isUnsubscribed()) {
-            whitelistSubscription = getWhitelistDatabase()
-                    .createQuery(WhitelistDbOpenHelper.TABLE_FOLDERS, "SELECT * FROM " + WhitelistDbOpenHelper.TABLE_FOLDERS)
-                    .mapToList(WhitelistFolder::new)
-                    .subscribe(whitelistRelay, error -> Crashlytics.log("getWhitelistRelay error: " + error.getMessage()));
-        }
-        return whitelistRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
+        return exclRelay.subscribeOn(Schedulers.io()).map(ArrayList::new);
     }
 }

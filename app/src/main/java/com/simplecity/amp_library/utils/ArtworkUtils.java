@@ -57,10 +57,7 @@ public class ArtworkUtils {
             File parent = file.getParentFile();
             if (parent.exists() && parent.isDirectory()) {
                 final Pattern pattern = Pattern.compile("(folder|cover|album).*\\.(jpg|jpeg|png)", Pattern.CASE_INSENSITIVE);
-                files = parent.listFiles(file1 -> {
-                            return pattern.matcher(file1.getName()).matches();
-                        }
-                );
+                files = parent.listFiles(file1 -> pattern.matcher(file1.getName()).matches());
 
                 if (files.length > 0) {
                     try {
@@ -110,30 +107,28 @@ public class ArtworkUtils {
 
         FileInputStream fileInputStream = null;
 
-        Cursor cursor = null;
+        Cursor cursor = ShuttleApplication.getInstance()
+                .getContentResolver()
+                .query(contentUri, new String[]{MediaStore.Audio.Albums.ALBUM_ART}, null, null, null);
 
-        try {
-            cursor = ShuttleApplication.getInstance()
-                    .getContentResolver()
-                    .query(contentUri, new String[]{MediaStore.Audio.Albums.ALBUM_ART}, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    File file = new File(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)));
+                    if (file.exists()) {
+                        try {
+                            fileInputStream = new FileInputStream(file);
+                        } catch (FileNotFoundException ignored) {
 
-            if (cursor != null && cursor.moveToFirst()) {
-                File file = new File(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)));
-                if (file.exists()) {
-                    try {
-                        fileInputStream = new FileInputStream(file);
-                    } catch (FileNotFoundException ignored) {
-
+                        }
                     }
                 }
-            }
+            } catch (NullPointerException ignored) {
 
-        } catch (NullPointerException ignored) {
-
-        } finally {
-            if (cursor != null) {
+            } finally {
                 cursor.close();
             }
+
         }
 
         return fileInputStream;
@@ -196,10 +191,7 @@ public class ArtworkUtils {
             File parent = new File(path).getParentFile();
             if (parent.exists() && parent.isDirectory()) {
                 final Pattern pattern = Pattern.compile("(folder|cover|album).*\\.(jpg|jpeg|png)", Pattern.CASE_INSENSITIVE);
-                files = parent.listFiles(file1 -> {
-                            return pattern.matcher(file1.getName()).matches();
-                        }
-                );
+                files = parent.listFiles(file1 -> pattern.matcher(file1.getName()).matches());
 
                 if (files.length != 0) {
                     for (File file : files) {

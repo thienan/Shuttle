@@ -9,15 +9,21 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 
+import com.afollestad.aesthetic.Aesthetic;
 import com.simplecity.amp_library.R;
 
+import io.reactivex.disposables.Disposable;
+
 public class DragGripView extends View {
+
+    Disposable aestheticDisposable;
+
     private static final int[] ATTRS = new int[]{android.R.attr.gravity,
             android.R.attr.color,};
 
     private static final int HORIZ_RIDGES = 2;
 
-    private int mGravity = Gravity.LEFT;
+    private int mGravity = Gravity.START;
     private int mColor = 0x33333333;
 
     private Paint mRidgePaint;
@@ -73,7 +79,7 @@ public class DragGripView extends View {
                         + ((mWidth - getPaddingLeft() - getPaddingRight()) - drawWidth)
                         / 2;
                 break;
-            case Gravity.RIGHT:
+            case Gravity.END:
                 drawLeft = getWidth() - getPaddingRight() - drawWidth;
                 break;
             default:
@@ -102,5 +108,25 @@ public class DragGripView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         mHeight = h;
         mWidth = w;
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        aestheticDisposable = Aesthetic.get(getContext())
+                .textColorSecondary()
+                .subscribe(color -> {
+                    mColor = color;
+                    mRidgePaint.setColor(color);
+                    invalidate();
+                });
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        aestheticDisposable.dispose();
+
+        super.onDetachedFromWindow();
     }
 }

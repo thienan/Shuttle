@@ -3,6 +3,7 @@ package com.simplecity.amp_library.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.simplecity.amp_library.R;
@@ -21,46 +22,10 @@ public class StringUtils {
 
     private static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
 
-    private static Pattern pattern = Pattern.compile("^(?i)\\s*(?:the |an |a )|(?:, the|, an|, a)\\s*$|[\\[\\]\\(\\)!\\?\\.,']");
+    private static Pattern pattern = Pattern.compile("^(?i)\\s*(?:the |an |a )|(?:, the|, an|, a)\\s*$|[\\[\\]()!?.,']");
 
     private StringUtils() {
 
-    }
-
-    /**
-     * Method makeAlbumsLabel.
-     *
-     * @param context   context
-     * @param numalbums the number of albums for this artist
-     * @param numsongs  the number of songs for this artist
-     * @param isUnknown boolean
-     * @return a label in the vein of "5 albums | 2 songs"
-     */
-    public static String makeAlbumsLabel(Context context, int numalbums, int numsongs, boolean isUnknown) {
-        // There are two formats for the albums/songs information:
-        // "N Song(s)" - used for unknown artist/album
-        // "N Album(s)" - used for known albums
-
-        final StringBuilder songs_albums = new StringBuilder();
-
-        final Resources r = context.getResources();
-        if (isUnknown) {
-            if (numsongs == 1) {
-                songs_albums.append(context.getString(R.string.onesong));
-            } else if (numsongs > 0) {
-                final String f = r.getQuantityText(R.plurals.Nsongs, numsongs).toString();
-                sFormatBuilder.setLength(0);
-                sFormatter.format(f, numsongs);
-                songs_albums.append(sFormatBuilder);
-            }
-        } else if (numalbums > 0) {
-            final String f = r.getQuantityText(R.plurals.Nalbums, numalbums).toString();
-            sFormatBuilder.setLength(0);
-            sFormatter.format(f, numalbums);
-            songs_albums.append(sFormatBuilder);
-            songs_albums.append(context.getString(R.string.albumsongseparator));
-        }
-        return songs_albums.toString();
     }
 
     /**
@@ -74,7 +39,8 @@ public class StringUtils {
      */
     public static String makeTimeString(@NonNull Context context, long secs) {
         sFormatBuilder.setLength(0);
-        return secs < 3600 ? makeShortTimeString(context, secs) : makeLongTimeString(context, secs);
+        //return (secs < 0 ? "- " : "") + (Math.abs(secs) < 3600 ? makeShortTimeString(context, Math.abs(secs)) : makeLongTimeString(context, Math.abs(secs)));
+        return Math.abs(secs) < 3600 ? makeShortTimeString(context, secs) : makeLongTimeString(context, secs);
     }
 
     private static String makeLongTimeString(@NonNull Context context, long secs) {
@@ -86,12 +52,14 @@ public class StringUtils {
     }
 
     private static String makeTimeString(String formatString, long secs) {
+        long absSeconds = Math.abs(secs);
         return sFormatter.format(formatString,
-                secs / 3600,
-                secs / 60,
-                (secs / 60) % 60,
-                secs,
-                secs % 60)
+                secs < 0 ? "- " : "",
+                absSeconds / 3600,
+                absSeconds / 60,
+                absSeconds / 60 % 60,
+                absSeconds,
+                absSeconds % 60)
                 .toString();
     }
 
@@ -129,8 +97,7 @@ public class StringUtils {
             if (numSubfiles == 1) {
                 string.append(context.getString(R.string.onesong));
             } else {
-                final String f = r.getQuantityText(R.plurals.Nsongs, numSubfiles)
-                        .toString();
+                final String f = r.getQuantityText(R.plurals.Nsongs, numSubfiles).toString();
                 sFormatBuilder.setLength(0);
                 sFormatter.format(f, numSubfiles);
                 string.append(sFormatBuilder);
@@ -171,6 +138,35 @@ public class StringUtils {
         return stringBuilder.toString();
     }
 
+    public static String makeAlbumsLabel(Context context, int numAlbums) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        String formatString = context.getResources().getQuantityText(R.plurals.Nalbums, numAlbums).toString();
+        sFormatBuilder.setLength(0);
+        sFormatter.format(formatString, numAlbums);
+        stringBuilder.append(sFormatBuilder);
+
+        return stringBuilder.toString();
+    }
+
+    public static String makeSongsLabel(Context context, int numSongs) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        String formatString = context.getResources().getQuantityText(R.plurals.Nsongs, numSongs).toString();
+        sFormatBuilder.setLength(0);
+        sFormatter.format(formatString, numSongs);
+        stringBuilder.append(sFormatBuilder);
+
+        return stringBuilder.toString();
+    }
+
+    public static String makeYearLabel(Context context, int year) {
+
+        if (year <= 0) {
+            return context.getResources().getString(R.string.unknown_year);
+        }
+
+        return String.format("%s", year);
+    }
+
     /**
      * Converts a name to a "key" that can be used for grouping, sorting
      * and searching.
@@ -208,6 +204,34 @@ public class StringUtils {
     }
 
     /**
+     * Find the Jaro Winkler Similarity which indicates the similarity score between two Strings.
+     * <p>
+     * Note: This method splits the {@param first} string at whitespaces, and returns the best Jaro-Winkler
+     * score between {@param second} and the 'split' strings.
+     */
+    public static double getAdjustedJaroWinklerSimilarity(@Nullable String first, @Nullable String second) {
+
+        if (TextUtils.isEmpty(first) || TextUtils.isEmpty(second)) {
+            return 0;
+        }
+
+        String[] split = first.split("\\s");
+        if (split.length > 1) {
+            double score = 0;
+            for (String str : split) {
+                double curScore = getJaroWinklerSimilarity(str, second);
+                if (curScore > score) {
+                    score = curScore;
+                }
+            }
+            //Make sure we do a normal (non-adjusted) test as well, in case that comes out as our best match.
+            return Math.max(getJaroWinklerSimilarity(first, second), score);
+        } else {
+            return getJaroWinklerSimilarity(first, second);
+        }
+    }
+
+    /**
      * <p>Find the Jaro Winkler Similarity which indicates the similarity score between two Strings.</p>
      * <p>
      * <p>The Jaro measure is the weighted sum of percentage of matched characters from each file and transposed characters.
@@ -220,16 +244,10 @@ public class StringUtils {
      * @param first  the first String, must not be null
      * @param second the second String, must not be null
      * @return result similarity
-     * @throws IllegalArgumentException if either String input {@code null}
-     * @since 3.6
      */
-    public static double getJaroWinklerSimilarity(String first, String second) {
+    public static double getJaroWinklerSimilarity(@NonNull String first, @NonNull String second) {
 
         final double DEFAULT_SCALING_FACTOR = 0.1;
-
-        if (first == null || second == null) {
-            throw new IllegalArgumentException("Strings must not be null");
-        }
 
         first = first.toLowerCase();
         second = second.toLowerCase();
@@ -300,5 +318,16 @@ public class StringUtils {
             }
         }
         return new int[]{matches, transpositions / 2, prefix, max.length()};
+    }
+
+    public static int parseInt(@Nullable String string) {
+        if (string != null) {
+            try {
+                return Integer.parseInt(string);
+            } catch (NumberFormatException ignored) {
+
+            }
+        }
+        return -1;
     }
 }

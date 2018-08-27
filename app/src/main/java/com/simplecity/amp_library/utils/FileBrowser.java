@@ -1,8 +1,10 @@
 package com.simplecity.amp_library.utils;
 
 import android.os.Environment;
+import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 
+import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.interfaces.FileType;
 import com.simplecity.amp_library.model.BaseFileObject;
 import com.simplecity.amp_library.model.FileObject;
@@ -19,7 +21,7 @@ public class FileBrowser {
 
     private static final String TAG = "FileBrowser";
 
-    private File mCurrentDir;
+    private File currentDir;
 
     /**
      * Loads the specified folder.
@@ -27,8 +29,12 @@ public class FileBrowser {
      * @param directory The file object to points to the directory to load.
      * @return An {@link List<BaseFileObject>} object that holds the data of the specified directory.
      */
+    @WorkerThread
     public List<BaseFileObject> loadDir(File directory) {
-        mCurrentDir = directory;
+
+        ThreadUtils.ensureNotOnMainThread();
+
+        currentDir = directory;
 
         List<BaseFileObject> folderObjects = new ArrayList<>();
         List<BaseFileObject> fileObjects = new ArrayList<>();
@@ -91,11 +97,11 @@ public class FileBrowser {
 
         folderObjects.addAll(fileObjects);
 
-        if (!FileHelper.isRootDirectory(mCurrentDir)) {
+        if (!FileHelper.isRootDirectory(currentDir)) {
             FolderObject parentObject = new FolderObject();
             parentObject.fileType = FileType.PARENT;
             parentObject.name = FileHelper.PARENT_DIRECTORY;
-            parentObject.path = FileHelper.getPath(mCurrentDir) + "/" + FileHelper.PARENT_DIRECTORY;
+            parentObject.path = FileHelper.getPath(currentDir) + "/" + FileHelper.PARENT_DIRECTORY;
             folderObjects.add(0, parentObject);
         }
 
@@ -103,10 +109,13 @@ public class FileBrowser {
     }
 
     public File getCurrentDir() {
-        return mCurrentDir;
+        return currentDir;
     }
 
+    @WorkerThread
     public File getInitialDir() {
+
+        ThreadUtils.ensureNotOnMainThread();
 
         File dir;
         String[] files;
@@ -119,7 +128,7 @@ public class FileBrowser {
             }
         }
 
-        dir = getRootDir();
+        dir = new File("/");
 
         files = dir.list((dir1, filename) -> dir1.isDirectory() && filename.toLowerCase().contains("storage"));
 
@@ -151,10 +160,6 @@ public class FileBrowser {
         }
 
         return dir;
-    }
-
-    public File getRootDir() {
-        return new File("/");
     }
 
     public void sortFolderObjects(List<BaseFileObject> baseFileObjects) {
@@ -196,6 +201,48 @@ public class FileBrowser {
                 Collections.sort(baseFileObjects, artistNameComparator());
                 break;
         }
+    }
+
+    public void clearHomeDir() {
+        SettingsManager.getInstance().setFolderBrowserInitialDir("");
+    }
+
+    public void setHomeDir() {
+        SettingsManager.getInstance().setFolderBrowserInitialDir(currentDir.getPath());
+    }
+
+    public File getHomeDir() {
+        return new File(SettingsManager.getInstance().getFolderBrowserInitialDir());
+    }
+
+    public boolean hasHomeDir() {
+        return !TextUtils.isEmpty(getHomeDir().getPath());
+    }
+
+    public boolean atHomeDirectory() {
+        final File currDir = getCurrentDir();
+        final File homeDir = getHomeDir();
+        return currDir != null && homeDir != null && currDir.compareTo(homeDir) == 0;
+    }
+
+    public int getHomeDirIcon() {
+        int icon = R.drawable.ic_folder_outline;
+        if (atHomeDirectory()) {
+            icon = R.drawable.ic_folder_remove;
+        } else if (hasHomeDir()) {
+            icon = R.drawable.ic_folder_nav;
+        }
+        return icon;
+    }
+
+    public int getHomeDirTitle() {
+        int title = R.string.set_home_dir;
+        if (atHomeDirectory()) {
+            title = R.string.remove_home_dir;
+        } else if (hasHomeDir()) {
+            title = R.string.nav_home_dir;
+        }
+        return title;
     }
 
     private Comparator sizeComparator() {

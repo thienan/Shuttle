@@ -1,19 +1,26 @@
 package com.simplecity.amp_library.ui.modelviews;
 
 import android.support.annotation.StringRes;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.simplecity.amp_library.R;
+import com.simplecityapps.recycler_adapter.model.BaseViewModel;
+import com.simplecityapps.recycler_adapter.recyclerview.BaseViewHolder;
 
-public class EmptyView extends BaseAdaptableItem<String, EmptyView.ViewHolder> {
+import static android.util.Log.i;
+import static android.view.ViewGroup.LayoutParams;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static com.simplecity.amp_library.R.layout.empty_view;
+import static com.simplecity.amp_library.ui.adapters.ViewType.EMPTY;
+
+public class EmptyView extends BaseViewModel<EmptyView.ViewHolder> {
 
     private String text;
 
     private int resId = -1;
+
+    private int height = 0;
 
     public EmptyView(String text) {
         this.text = text;
@@ -23,35 +30,42 @@ public class EmptyView extends BaseAdaptableItem<String, EmptyView.ViewHolder> {
         this.resId = resId;
     }
 
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     @Override
     public int getViewType() {
-        return ViewType.EMPTY;
+        return EMPTY;
     }
 
     @Override
     public int getLayoutResId() {
-        return R.layout.empty_view;
+        return empty_view;
     }
 
     @Override
     public void bindView(ViewHolder holder) {
+        super.bindView(holder);
+
         if (resId != -1) {
             text = holder.itemView.getResources().getString(resId);
         }
+
         ((TextView) holder.itemView).setText(text);
+
+        if (height != 0) {
+            holder.itemView.setLayoutParams(new LayoutParams(MATCH_PARENT, height));
+            i("EmptyView", "Setting height to: " + height);
+        }
     }
 
     @Override
-    public ViewHolder getViewHolder(ViewGroup parent) {
-        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(getLayoutResId(), parent, false));
+    public ViewHolder createViewHolder(ViewGroup parent) {
+        return new ViewHolder(createView(parent));
     }
 
-    @Override
-    public String getItem() {
-        return text;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends BaseViewHolder {
 
         public ViewHolder(View itemView) {
             super(itemView);

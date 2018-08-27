@@ -1,6 +1,6 @@
 package com.simplecity.amp_library.ui.fragments;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -9,10 +9,10 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.simplecity.amp_library.R;
-import com.simplecity.amp_library.ui.activities.WidgetConfigureExtraLarge;
-import com.simplecity.amp_library.ui.activities.WidgetConfigureLarge;
-import com.simplecity.amp_library.ui.activities.WidgetConfigureMedium;
-import com.simplecity.amp_library.ui.activities.WidgetConfigureSmall;
+import com.simplecity.amp_library.ui.appwidget.WidgetConfigureExtraLarge;
+import com.simplecity.amp_library.ui.appwidget.WidgetConfigureLarge;
+import com.simplecity.amp_library.ui.appwidget.WidgetConfigureMedium;
+import com.simplecity.amp_library.ui.appwidget.WidgetConfigureSmall;
 
 public class WidgetFragment extends BaseFragment {
 
@@ -34,7 +34,7 @@ public class WidgetFragment extends BaseFragment {
      * @param widgetLayoutResId the id of the layout to use for the widget
      * @return a new instance of {@link com.simplecity.amp_library.ui.fragments.WidgetFragment}
      */
-    public WidgetFragment newInstance(int widgetLayoutResId) {
+    public static WidgetFragment newInstance(int widgetLayoutResId) {
         WidgetFragment fragment = new WidgetFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_WIDGET_LAYOUT_ID, widgetLayoutResId);
@@ -43,8 +43,8 @@ public class WidgetFragment extends BaseFragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         mWidgetLayoutResId = getArguments().getInt(ARG_WIDGET_LAYOUT_ID);
     }
@@ -59,8 +59,8 @@ public class WidgetFragment extends BaseFragment {
             frameLayout.setScaleY(.75f);
         }
 
-        float height = 0;
-        float width = 0;
+        float height;
+        float width;
         FrameLayout.LayoutParams layoutParams = null;
         if (mWidgetLayoutResId == R.layout.widget_layout_medium || mWidgetLayoutResId == R.layout.widget_layout_medium_alt) {
             height = getActivity().getResources().getDimension(R.dimen.widget_medium_height);
@@ -76,7 +76,7 @@ public class WidgetFragment extends BaseFragment {
             layoutParams = new FrameLayout.LayoutParams((int) width, (int) height);
         }
 
-        FrameLayout frameLayout1 = (FrameLayout) rootView.findViewById(R.id.frame);
+        FrameLayout frameLayout1 = rootView.findViewById(R.id.frame);
 
         if (layoutParams != null) {
             frameLayout1.addView(frameLayout, layoutParams);

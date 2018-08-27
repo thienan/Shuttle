@@ -21,12 +21,11 @@ import android.widget.TextView;
 
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.playback.MusicService;
-import com.simplecity.amp_library.utils.DrawableUtils;
 import com.simplecity.amp_library.utils.MusicServiceConnectionUtils;
 import com.simplecity.amp_library.utils.MusicUtils;
-import com.simplecity.amp_library.utils.ThemeUtils;
 
 
+//Todo: Reapply themes
 public class QCircleActivity extends BaseActivity {
 
     // [START]declared in LGIntent.java of LG Framework
@@ -40,13 +39,8 @@ public class QCircleActivity extends BaseActivity {
     public static final String QUICKCOVERSETTINGS_QUICKCOVER_ENABLE = "quick_view_enable";
     // [END] QuickCover Settings DB
 
-    // QuickCover Type
-    public static final int QUICKCOVERSETTINGS_QUICKCIRCLE = 3;
-
     // [START] QuickCircle info.
     static boolean quickCircleEnabled = false;
-    static int quickCaseType = 0;
-    static boolean quickCircleClosed = true;
     int circleWidth = 0;
     int circleHeight = 0;
     int circleXpos = 0;
@@ -190,9 +184,6 @@ public class QCircleActivity extends BaseActivity {
             Log.d(TAG, "quickCircleEnabled:" + quickCircleEnabled);
         }
 
-        //Get a case type
-        quickCaseType = Settings.Global.getInt(contentResolver, "cover_type", 0/*default value*/);
-
 
         //[START] Get the QuickCircle window information
         int id = getResources().getIdentifier("config_circle_window_width", "dimen",
@@ -234,11 +225,9 @@ public class QCircleActivity extends BaseActivity {
 
     private void initButtons() {
 
-        prevBtn = (ImageButton) findViewById(R.id.btn_prev);
-        prevBtn.setImageDrawable(DrawableUtils.getColoredStateListDrawableWithThemeType(this, R.drawable.ic_prev_white, ThemeUtils.ThemeType.TYPE_DARK));
-        skipBtn = (ImageButton) findViewById(R.id.btn_skip);
-        skipBtn.setImageDrawable(DrawableUtils.getColoredStateListDrawableWithThemeType(this, R.drawable.ic_skip_white, ThemeUtils.ThemeType.TYPE_DARK));
-        pauseBtn = (ImageButton) findViewById(R.id.btn_pause);
+        prevBtn = findViewById(R.id.btn_prev);
+        skipBtn = findViewById(R.id.btn_skip);
+        pauseBtn = findViewById(R.id.btn_pause);
         setPauseButtonImage();
 
 
@@ -254,8 +243,8 @@ public class QCircleActivity extends BaseActivity {
     }
 
     public void initTextViews() {
-        textOne = (TextView) findViewById(R.id.text1);
-        textTwo = (TextView) findViewById(R.id.text2);
+        textOne = findViewById(R.id.text1);
+        textTwo = findViewById(R.id.text2);
     }
 
     public void setPauseButtonImage() {
@@ -263,19 +252,16 @@ public class QCircleActivity extends BaseActivity {
         if (pauseBtn == null) {
             return;
         }
-        if (MusicServiceConnectionUtils.sServiceBinder != null && MusicUtils.isPlaying()) {
-            pauseBtn.setImageDrawable(DrawableUtils.getColoredStateListDrawableWithThemeType(this, R.drawable.ic_pause_white, ThemeUtils.ThemeType.TYPE_DARK));
+        if (MusicServiceConnectionUtils.serviceBinder != null && MusicUtils.isPlaying()) {
+
         } else {
-            pauseBtn.setImageDrawable(DrawableUtils.getColoredStateListDrawableWithThemeType(this, R.drawable.ic_play_white, ThemeUtils.ThemeType.TYPE_DARK));
+
         }
     }
 
     private void initializeBackButton() {
-        backBtn = (ImageButton) findViewById(R.id.back_btn);
-        backBtn.setImageDrawable(DrawableUtils.getColoredStateListDrawableWithThemeType(this, R.drawable.backbutton, ThemeUtils.ThemeType.TYPE_DARK));
-        backBtn.setOnClickListener(v -> {
-            QCircleActivity.this.finish();
-        });
+        backBtn = findViewById(R.id.back_btn);
+        backBtn.setOnClickListener(v -> QCircleActivity.this.finish());
     }
 
     void updateTrackInfo() {

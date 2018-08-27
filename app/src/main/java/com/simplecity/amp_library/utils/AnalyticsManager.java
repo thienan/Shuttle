@@ -21,29 +21,7 @@ public class AnalyticsManager {
     public @interface UpgradeType {
         String NAG = "Nag";
         String FOLDER = "Folder";
-        String COLORS = "Colors";
         String UPGRADE = "Upgrade";
-    }
-
-    public interface ColorType {
-        String PRIMARY = "primary";
-        String ACCENT = "accent";
-    }
-
-    public static void logColorPicked(String colorType, int color) {
-        if (!analyticsEnabled()) {
-            return;
-        }
-        switch (colorType) {
-            case ColorType.PRIMARY:
-                Answers.getInstance().logCustom(new CustomEvent("Primary Color Changed")
-                        .putCustomAttribute("Color", String.format("#%06X", (0xFFFFFF & color))));
-                break;
-            case ColorType.ACCENT:
-                Answers.getInstance().logCustom(new CustomEvent("Accent Color Changed")
-                        .putCustomAttribute("Color", String.format("#%06X", (0xFFFFFF & color))));
-                break;
-        }
     }
 
     public static void logChangelogViewed() {
@@ -58,20 +36,6 @@ public class AnalyticsManager {
         FirebaseAnalytics.getInstance(ShuttleApplication.getInstance())
                 .logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
         Answers.getInstance().logCustom(new CustomEvent("Changelog Viewed"));
-    }
-
-    public static void logTabVisibilityChanged(boolean visible, String title) {
-        if (!analyticsEnabled()) {
-            return;
-        }
-
-        if (visible) {
-            Answers.getInstance().logCustom(new CustomEvent("Tab Enabled")
-                    .putCustomAttribute("Tab", title));
-        } else {
-            Answers.getInstance().logCustom(new CustomEvent("Tab Disabled")
-                    .putCustomAttribute("Tab", title));
-        }
     }
 
     public static void logUpgrade(@UpgradeType String upgradeType) {
@@ -104,5 +68,59 @@ public class AnalyticsManager {
         }
 
         FirebaseAnalytics.getInstance(ShuttleApplication.getInstance()).setUserProperty("Upgraded", String.valueOf(ShuttleUtils.isUpgraded()));
+    }
+
+    public static void logInitialTheme(ThemeUtils.Theme theme) {
+        if (!analyticsEnabled()) {
+            return;
+        }
+
+        Bundle params = new Bundle();
+        params.putString(FirebaseAnalytics.Param.ITEM_ID, String.valueOf(theme.id));
+        params.putString(FirebaseAnalytics.Param.ITEM_NAME, String.format("%s-%s-%s", theme.primaryColorName, theme.accentColorName, theme.isDark));
+        params.putString(FirebaseAnalytics.Param.ITEM_CATEGORY, "themes");
+        FirebaseAnalytics.getInstance(ShuttleApplication.getInstance()).logEvent(FirebaseAnalytics.Event.VIEW_ITEM, params);
+    }
+
+    public static void logRateShown() {
+        if (!analyticsEnabled()) {
+            return;
+        }
+
+        Bundle params = new Bundle();
+        params.putString(FirebaseAnalytics.Param.ITEM_ID, "show_rate_snackbar");
+        params.putString(FirebaseAnalytics.Param.ITEM_NAME, "show_rate_snackbar");
+        params.putString(FirebaseAnalytics.Param.ITEM_CATEGORY, "rate_app");
+
+        FirebaseAnalytics.getInstance(ShuttleApplication.getInstance())
+                .logEvent(FirebaseAnalytics.Event.VIEW_ITEM, params);
+    }
+
+    public static void logRateClicked() {
+        if (!analyticsEnabled()) {
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "rate_snackbar");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "0");
+
+        FirebaseAnalytics.getInstance(ShuttleApplication.getInstance())
+                .logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+    }
+
+    public static void didSnow(){
+        if (!analyticsEnabled()) {
+            return;
+        }
+
+        Bundle params = new Bundle();
+        params.putString(FirebaseAnalytics.Param.ITEM_ID, "show_snow");
+        params.putString(FirebaseAnalytics.Param.ITEM_NAME, "show_snow");
+        params.putString(FirebaseAnalytics.Param.ITEM_CATEGORY, "easter_eggs");
+
+        FirebaseAnalytics.getInstance(ShuttleApplication.getInstance())
+                .logEvent(FirebaseAnalytics.Event.VIEW_ITEM, params);
+
     }
 }

@@ -4,10 +4,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
-import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.http.HttpClient;
-import com.simplecity.amp_library.lastfm.ItunesResult;
-import com.simplecity.amp_library.lastfm.LastFmResult;
+import com.simplecity.amp_library.http.itunes.ItunesResult;
+import com.simplecity.amp_library.http.lastfm.LastFmResult;
 import com.simplecity.amp_library.utils.ArtworkUtils;
 import com.simplecity.amp_library.utils.ComparisonUtils;
 import com.simplecity.amp_library.utils.DataManager;
@@ -19,8 +18,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Single;
 import retrofit2.Call;
-import rx.Observable;
 
 public class Album implements
         Serializable,
@@ -29,7 +28,6 @@ public class Album implements
         Sortable {
 
     public long id;
-    public long artistId;
     public String name;
 
     public List<Artist> artists = new ArrayList<>();
@@ -68,8 +66,8 @@ public class Album implements
         setArtworkKey();
     }
 
-    public Observable<List<Song>> getSongsObservable() {
-        return DataManager.getInstance().getSongsObservable(song -> song.albumId == id);
+    public Single<List<Song>> getSongsSingle() {
+        return DataManager.getInstance().getSongsObservable(song -> song.albumId == id).firstOrError();
     }
 
     public static class Builder {
@@ -154,10 +152,6 @@ public class Album implements
         }
     }
 
-    public String getNumSongsLabel() {
-        return StringUtils.makeAlbumsLabel(ShuttleApplication.getInstance(), 0, numSongs, true);
-    }
-
     public AlbumArtist getAlbumArtist() {
         return new AlbumArtist.Builder()
                 .name(albumArtistName)
@@ -173,31 +167,13 @@ public class Album implements
         Album album = (Album) o;
 
         if (id != album.id) return false;
-        if (artistId != album.artistId) return false;
-        if (year != album.year) return false;
-        if (numSongs != album.numSongs) return false;
-        if (lastPlayed != album.lastPlayed) return false;
-        if (dateAdded != album.dateAdded) return false;
-        if (name != null ? !name.equals(album.name) : album.name != null) return false;
-        if (artists != null ? !artists.equals(album.artists) : album.artists != null) return false;
-        if (albumArtistName != null ? !albumArtistName.equals(album.albumArtistName) : album.albumArtistName != null)
-            return false;
-        return paths != null ? paths.equals(album.paths) : album.paths == null;
-
+        return name != null ? name.equals(album.name) : album.name == null;
     }
 
     @Override
     public int hashCode() {
         int result = (int) (id ^ (id >>> 32));
-        result = 31 * result + (int) (artistId ^ (artistId >>> 32));
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (artists != null ? artists.hashCode() : 0);
-        result = 31 * result + (albumArtistName != null ? albumArtistName.hashCode() : 0);
-        result = 31 * result + year;
-        result = 31 * result + numSongs;
-        result = 31 * result + (int) (lastPlayed ^ (lastPlayed >>> 32));
-        result = 31 * result + (int) (dateAdded ^ (dateAdded >>> 32));
-        result = 31 * result + (paths != null ? paths.hashCode() : 0);
         return result;
     }
 
@@ -205,7 +181,6 @@ public class Album implements
     public String toString() {
         return "Album{" +
                 "id=" + id +
-                ", artistId=" + artistId +
                 ", name='" + name + '\'' +
                 ", artists=" + artists +
                 ", albumArtistName='" + albumArtistName + '\'' +
@@ -231,6 +206,7 @@ public class Album implements
     }
 
     @Override
+    @NonNull
     public String getArtworkKey() {
         if (artworkKey == null) setArtworkKey();
         return artworkKey;

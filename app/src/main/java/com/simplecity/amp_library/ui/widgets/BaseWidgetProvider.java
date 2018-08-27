@@ -13,12 +13,16 @@ import android.preference.PreferenceManager;
 import android.support.annotation.LayoutRes;
 import android.widget.RemoteViews;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
+import com.simplecity.amp_library.glide.utils.CustomAppWidgetTarget;
 import com.simplecity.amp_library.playback.MusicService;
+import com.simplecity.amp_library.rx.UnsafeAction;
 import com.simplecity.amp_library.ui.activities.MainActivity;
-
-import rx.functions.Action0;
+import com.simplecity.amp_library.utils.DrawableUtils;
+import com.simplecity.amp_library.utils.ShuttleUtils;
 
 public abstract class BaseWidgetProvider extends AppWidgetProvider {
 
@@ -30,8 +34,8 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 
     public abstract int getRootViewId();
 
-    protected void doOnMainThread(Action0 action) {
-        new Handler(Looper.getMainLooper()).post(action::call);
+    protected void doOnMainThread(UnsafeAction action) {
+        new Handler(Looper.getMainLooper()).post(action::run);
     }
 
     public static final String ARG_WIDGET_BACKGROUND_COLOR = "widget_background_color_";
@@ -94,38 +98,87 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 
     public static void setupButtons(Context context, RemoteViews views, int appWidgetId, int rootViewId) {
 
-        Intent intent;
-        PendingIntent pendingIntent;
-
-        final ComponentName serviceName = new ComponentName(context, MusicService.class);
-
-        intent = new Intent(context, MainActivity.class);
-        pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
         views.setOnClickPendingIntent(rootViewId, pendingIntent);
 
-        intent = new Intent(MusicService.ServiceCommand.TOGGLE_PAUSE_ACTION);
-        intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context, appWidgetId, intent, 0);
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(MusicService.ServiceCommand.TOGGLE_PAUSE_ACTION));
         views.setOnClickPendingIntent(R.id.play_button, pendingIntent);
 
-        intent = new Intent(MusicService.ServiceCommand.NEXT_ACTION);
-        intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context, appWidgetId, intent, 0);
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(MusicService.ServiceCommand.NEXT_ACTION));
         views.setOnClickPendingIntent(R.id.next_button, pendingIntent);
 
-        intent = new Intent(MusicService.ServiceCommand.PREV_ACTION);
-        intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context, appWidgetId, intent, 0);
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(MusicService.ServiceCommand.PREV_ACTION));
         views.setOnClickPendingIntent(R.id.prev_button, pendingIntent);
 
-        intent = new Intent(MusicService.ServiceCommand.SHUFFLE_ACTION);
-        intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context, appWidgetId, intent, 0);
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(MusicService.ServiceCommand.SHUFFLE_ACTION));
         views.setOnClickPendingIntent(R.id.shuffle_button, pendingIntent);
 
-        intent = new Intent(MusicService.ServiceCommand.REPEAT_ACTION);
-        intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context, appWidgetId, intent, 0);
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(MusicService.ServiceCommand.REPEAT_ACTION));
         views.setOnClickPendingIntent(R.id.repeat_button, pendingIntent);
+    }
+
+    private static PendingIntent getPendingIntent(Context context, int appWidgetId, Intent intent) {
+        intent.setComponent(new ComponentName(context, MusicService.class));
+        if (ShuttleUtils.hasOreo()) {
+            return PendingIntent.getForegroundService(context, appWidgetId, intent, 0);
+        } else {
+            return PendingIntent.getService(context, appWidgetId, intent, 0);
+        }
+    }
+
+    void loadArtwork(MusicService service, int[] appWidgetIds, RemoteViews views, int bitmapSize) {
+        //Try to load the artwork. If it fails, halve the dimensions and try again.
+        loadArtwork(service, views, bitmapSize, e ->
+                loadArtwork(service, views, bitmapSize / 2, e1 ->
+                        //If this one doesn't work, load a placeholder.
+                        loadArtwork(service, views, bitmapSize / 3, e2
+                                        -> views.setImageViewResource(R.id.album_art, R.drawable.ic_placeholder_light_medium),
+                                appWidgetIds), appWidgetIds), appWidgetIds);
+    }
+
+    void loadArtwork(MusicService service, RemoteViews views, int size, CustomAppWidgetTarget.CustomErrorListener errorListener, int... appWidgetIds) {
+        Glide.with(service)
+                .load(service.getSong())
+                .asBitmap()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(new CustomAppWidgetTarget(service, views, R.id.album_art, size, size, errorListener, appWidgetIds));
+    }
+
+    void setupRepeatView(MusicService service, RemoteViews views, boolean invertIcons) {
+        switch (service.getRepeatMode()) {
+            case MusicService.RepeatMode.ALL:
+                views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_repeat_24dp_scaled));
+                views.setContentDescription(R.id.shuffle_button, service.getString(R.string.btn_repeat_current));
+                break;
+            case MusicService.RepeatMode.ONE:
+                views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_repeat_one_24dp_scaled));
+                views.setContentDescription(R.id.shuffle_button, service.getString(R.string.btn_repeat_off));
+                break;
+            default:
+                if (invertIcons) {
+                    views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_repeat_24dp_scaled));
+                } else {
+                    views.setImageViewResource(R.id.repeat_button, R.drawable.ic_repeat_24dp_scaled);
+                }
+                views.setContentDescription(R.id.shuffle_button, service.getString(R.string.btn_repeat_all));
+                break;
+        }
+    }
+
+    void setupShuffleView(MusicService service, RemoteViews views, boolean invertIcons) {
+        switch (service.getShuffleMode()) {
+            case MusicService.ShuffleMode.OFF:
+                if (invertIcons) {
+                    views.setImageViewBitmap(R.id.shuffle_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_shuffle_24dp_scaled));
+                } else {
+                    views.setImageViewResource(R.id.shuffle_button, R.drawable.ic_shuffle_24dp_scaled);
+                }
+                views.setContentDescription(R.id.shuffle_button, service.getString(R.string.btn_shuffle_on));
+                break;
+            default:
+                views.setImageViewBitmap(R.id.shuffle_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_shuffle_24dp_scaled));
+                views.setContentDescription(R.id.shuffle_button, service.getString(R.string.btn_shuffle_off));
+                break;
+        }
     }
 }

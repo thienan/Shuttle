@@ -5,14 +5,18 @@ import com.simplecity.amp_library.utils.MusicUtils;
 
 import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
 
 public class PlaybackMonitor {
 
+    private static final String TAG = "PlaybackMonitor";
+
     private static PlaybackMonitor instance;
 
-    private Observable<Float> progressObservable;
-    private Observable<Long> currentTimeObservable;
+    private Flowable<Float> progressObservable;
+    private Flowable<Long> currentTimeObservable;
 
     public static PlaybackMonitor getInstance() {
         if (instance == null) {
@@ -22,11 +26,10 @@ public class PlaybackMonitor {
     }
 
     private PlaybackMonitor() {
-
-        progressObservable = Observable.defer(() -> Observable.interval(32, TimeUnit.MILLISECONDS)
+        progressObservable = Flowable.defer(() -> Observable.interval(32, TimeUnit.MILLISECONDS)
                 .filter(aLong -> {
-                    if (MusicServiceConnectionUtils.sServiceBinder != null
-                            && MusicServiceConnectionUtils.sServiceBinder.getService() != null) {
+                    if (MusicServiceConnectionUtils.serviceBinder != null
+                            && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
                         if (MusicUtils.getDuration() > 0) {
                             return true;
                         }
@@ -34,22 +37,22 @@ public class PlaybackMonitor {
                     return false;
                 })
                 .map(aLong -> (float) MusicUtils.getPosition() / (float) MusicUtils.getDuration())
-                .onBackpressureDrop())
+                .toFlowable(BackpressureStrategy.DROP))
                 .share();
 
-        currentTimeObservable = Observable.defer(() -> Observable.interval(150, TimeUnit.MILLISECONDS)
-                .filter(aLong -> MusicServiceConnectionUtils.sServiceBinder != null
-                        && MusicServiceConnectionUtils.sServiceBinder.getService() != null)
+        currentTimeObservable = Flowable.defer(() -> Observable.interval(150, TimeUnit.MILLISECONDS)
+                .filter(aLong -> MusicServiceConnectionUtils.serviceBinder != null
+                        && MusicServiceConnectionUtils.serviceBinder.getService() != null)
                 .map(time -> MusicUtils.getPosition())
-                .onBackpressureDrop())
+                .toFlowable(BackpressureStrategy.DROP))
                 .share();
     }
 
-    public Observable<Float> getProgressObservable() {
+    public Flowable<Float> getProgressObservable() {
         return progressObservable;
     }
 
-    public Observable<Long> getCurrentTimeObservable() {
+    public Flowable<Long> getCurrentTimeObservable() {
         return currentTimeObservable;
     }
 

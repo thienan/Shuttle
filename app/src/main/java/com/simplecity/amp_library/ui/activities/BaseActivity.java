@@ -2,35 +2,43 @@ package com.simplecity.amp_library.ui.activities;
 
 import android.Manifest;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.afollestad.aesthetic.AestheticActivity;
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.Purchase;
 import com.greysonparrelli.permiso.Permiso;
-import com.simplecity.amp_library.interfaces.ThemeCallbacks;
+import com.simplecity.amp_library.R;
+import com.simplecity.amp_library.ShuttleApplication;
+import com.simplecity.amp_library.billing.BillingManager;
+import com.simplecity.amp_library.constants.Config;
+import com.simplecity.amp_library.playback.MusicService;
+import com.simplecity.amp_library.ui.dialog.UpgradeDialog;
 import com.simplecity.amp_library.utils.MusicServiceConnectionUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
-import com.simplecity.amp_library.utils.ThemeUtils;
+
+import java.util.List;
 
 import static android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 
-public abstract class BaseActivity extends AppCompatActivity implements
-        ServiceConnection,
-        ThemeCallbacks {
+public abstract class BaseActivity extends AestheticActivity implements ServiceConnection {
 
-    private SharedPreferences mPreferences;
+    @Nullable
+    private MusicServiceConnectionUtils.ServiceToken token;
 
-    private MusicServiceConnectionUtils.ServiceToken mToken;
+    @Nullable
+    private BillingManager billingManager;
 
     @CallSuper
     protected void onCreate(final Bundle savedInstanceState) {
@@ -38,16 +46,11 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
         Permiso.getInstance().setActivity(this);
 
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mPreferences.registerOnSharedPreferenceChangeListener(mSharedPreferenceChangeListener);
-
         Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
             @Override
             public void onPermissionResult(Permiso.ResultSet resultSet) {
                 if (resultSet.areAllPermissionsGranted()) {
-                    bindToService();
+                    bindService();
                 } else {
                     Toast.makeText(BaseActivity.this, "Permission check failed", Toast.LENGTH_LONG).show();
                     finish();
@@ -59,10 +62,32 @@ public abstract class BaseActivity extends AppCompatActivity implements
                 callback.onRationaleProvided();
             }
         }, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.WAKE_LOCK);
-    }
 
-    void bindToService() {
-        mToken = MusicServiceConnectionUtils.bindToService(this, this);
+        billingManager = new BillingManager(this, new BillingManager.BillingUpdatesListener() {
+            @Override
+            public void onPurchasesUpdated(List<Purchase> purchases) {
+                for (Purchase purchase : purchases) {
+                    if (purchase.getSku().equals(Config.SKU_PREMIUM)) {
+                        ShuttleApplication.getInstance().setIsUpgraded(true);
+                    }
+                }
+            }
+
+            @Override
+            public void onPremiumPurchaseCompleted() {
+                ShuttleApplication.getInstance().setIsUpgraded(true);
+                UpgradeDialog.getUpgradeSuccessDialog(BaseActivity.this).show();
+            }
+
+            @Override
+            public void onPremiumPurchaseRestored() {
+                ShuttleApplication.getInstance().setIsUpgraded(true);
+                Toast.makeText(BaseActivity.this, R.string.iab_purchase_restored, Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
     @Override
@@ -70,7 +95,15 @@ public abstract class BaseActivity extends AppCompatActivity implements
         keepScreenOn(SettingsManager.getInstance().keepScreenOn());
         super.onResume();
 
+        if (token == null) {
+            bindService();
+        }
+
         Permiso.getInstance().setActivity(this);
+
+        if (billingManager != null && billingManager.getBillingClientResponseCode() == BillingClient.BillingResponse.OK) {
+            billingManager.queryPurchases();
+        }
     }
 
     @Override
@@ -81,25 +114,40 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        unbindService();
 
-        if (mToken != null) {
-            MusicServiceConnectionUtils.unbindFromService(mToken);
-            mToken = null;
+        if (billingManager != null) {
+            billingManager.destroy();
         }
-
-        mPreferences.unregisterOnSharedPreferenceChangeListener(mSharedPreferenceChangeListener);
 
         super.onDestroy();
     }
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
+    @Nullable
+    public BillingManager getBillingManager() {
+        return billingManager;
+    }
 
+    void bindService() {
+        token = MusicServiceConnectionUtils.bindToService(this, this);
+    }
+
+    void unbindService() {
+        if (token != null) {
+            MusicServiceConnectionUtils.unbindFromService(token);
+            token = null;
+        }
+    }
+
+    @Override
+    @CallSuper
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        sendBroadcast(new Intent(MusicService.InternalIntents.SERVICE_CONNECTED));
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-
+        unbindService();
     }
 
     @Override
@@ -130,26 +178,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
         }
     }
 
-    private SharedPreferences.OnSharedPreferenceChangeListener mSharedPreferenceChangeListener = (sharedPreferences, key) -> {
-        if (key.equals("pref_theme_highlight_color")
-                || key.equals("pref_theme_accent_color")
-                || key.equals("pref_theme_white_accent")) {
-            themeColorChanged();
-        }
-        if (key.equals("pref_nav_bar")) {
-            navBarThemeChanged(SettingsManager.getInstance().canTintNavBar());
-        }
-    };
-
-    @Override
-    public void themeColorChanged() {
-        navBarThemeChanged(SettingsManager.getInstance().canTintNavBar());
-    }
-
-    @Override
-    public void navBarThemeChanged(boolean canTheme) {
-        ThemeUtils.themeNavBar(this, canTheme);
-    }
-
     protected abstract String screenName();
+
 }

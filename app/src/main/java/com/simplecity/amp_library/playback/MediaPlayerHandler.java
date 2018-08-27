@@ -58,12 +58,17 @@ final class MediaPlayerHandler extends Handler {
             case MusicService.PlayerHandler.TRACK_WENT_TO_NEXT:
                 service.notifyChange(MusicService.InternalIntents.TRACK_ENDING);
                 service.playPos = service.nextPlayPos;
-                if (service.playPos >= 0 && !service.getCurrentPlaylist().isEmpty()) {
+                if (service.playPos >= 0 && !service.getCurrentPlaylist().isEmpty() && service.playPos < service.getCurrentPlaylist().size()) {
                     service.currentSong = service.getCurrentPlaylist().get(service.playPos);
                 }
                 service.notifyChange(MusicService.InternalIntents.META_CHANGED);
                 service.updateNotification();
                 service.setNextTrack();
+
+                if (service.pauseOnTrackFinish) {
+                    service.pause();
+                    service.pauseOnTrackFinish = false;
+                }
                 break;
             case MusicService.PlayerHandler.TRACK_ENDED:
                 service.notifyChange(MusicService.InternalIntents.TRACK_ENDING);
@@ -75,7 +80,7 @@ final class MediaPlayerHandler extends Handler {
                 }
                 break;
             case MusicService.PlayerHandler.RELEASE_WAKELOCK:
-                service.mWakeLock.release();
+                service.wakeLock.release();
                 break;
 
             case MusicService.PlayerHandler.FOCUS_CHANGE:

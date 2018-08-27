@@ -15,12 +15,16 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
-import android.widget.ImageView;
 
+import com.afollestad.aesthetic.Aesthetic;
 import com.simplecity.amp_library.R;
 
-public class CircleImageView extends ImageView {
+import io.reactivex.disposables.Disposable;
+
+public class CircleImageView extends AppCompatImageView {
 
     private static final ScaleType SCALE_TYPE = ScaleType.CENTER_CROP;
 
@@ -51,6 +55,8 @@ public class CircleImageView extends ImageView {
 
     private boolean mReady;
     private boolean mSetupPending;
+
+    private Disposable aestheticDisposable;
 
     public CircleImageView(Context context) {
         super(context);
@@ -265,4 +271,26 @@ public class CircleImageView extends ImageView {
         mBitmapShader.setLocalMatrix(mShaderMatrix);
     }
 
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (!isInEditMode()) {
+            aestheticDisposable = Aesthetic.get(getContext()).isDark()
+                    .subscribe(isDark -> {
+                        if (isDark) {
+                            setBorderColor(ContextCompat.getColor(getContext(), R.color.md_grey_900));
+                        } else {
+                            setBorderColor(ContextCompat.getColor(getContext(), R.color.md_grey_250));
+                        }
+                    });
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        aestheticDisposable.dispose();
+    }
 }

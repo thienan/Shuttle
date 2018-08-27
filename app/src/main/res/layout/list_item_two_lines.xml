@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.simplecity.amp_library.ui.views.ForegroundLinearLayout
+<android.support.design.internal.ForegroundLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,14 +9,16 @@
     android:gravity="center"
     android:orientation="horizontal"
     android:paddingLeft="16dp"
-    android:paddingRight="8dp">
+    android:paddingStart="16dp">
 
     <TextView
         android:id="@+id/trackNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="20dp"
+        android:layout_marginStart="8dp"
         android:gravity="center"
         android:minEms="1"
         android:visibility="gone"
@@ -25,7 +27,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:clipChildren="false"
         android:clipToPadding="false"
@@ -35,11 +37,13 @@
         <TextView
             android:id="@+id/line_one"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:clipToPadding="false"
             android:ellipsize="end"
             android:gravity="center_vertical"
-            android:singleLine="true"
+            android:maxLines="1"
+            android:textColor="?android:textColorPrimary"
             android:textSize="16sp"
             tools:text="Feeling Kind Of Anxious"/>
 
@@ -47,17 +51,19 @@
             android:id="@+id/line_two"
             style="?attr/secondaryTextViewStyle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:clipToPadding="false"
             android:ellipsize="end"
             android:gravity="center_vertical"
-            android:singleLine="true"
+            android:maxLines="1"
+            android:textColor="?android:textColorSecondary"
             android:textSize="14sp"
             tools:text="Franz Ferdinand - Tonight"/>
 
     </LinearLayout>
 
-    <TextView
+    <com.simplecity.amp_library.ui.views.PlayCountView
         android:id="@+id/play_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -65,10 +71,9 @@
         android:gravity="center"
         android:minHeight="28dp"
         android:minWidth="28dp"
-        android:textColor="@color/default_text_color_holo_dark"
+        android:tag=":aesthetic_ignore"
         android:textSize="14sp"
         android:visibility="gone"
-        tools:background="@color/pink_a200"
         tools:text="3"
         tools:visibility="visible"/>
 
@@ -79,18 +84,11 @@
         android:layout_height="24dp"
         android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:minEms="3"
-        android:singleLine="true"
         android:textSize="14sp"
         tools:text="3:20"/>
 
-    <com.simplecity.amp_library.ui.views.NonScrollImageButton
-        android:id="@+id/btn_overflow"
-        android:layout_width="40dp"
-        android:layout_height="48dp"
-        android:layout_marginLeft="-4dp"
-        android:layout_marginRight="4dp"
-        android:alpha="0.8"
-        android:background="@null"
-        android:src="@drawable/ic_overflow_white"/>
-</com.simplecity.amp_library.ui.views.ForegroundLinearLayout>
+    <include layout="@layout/overflow_button"/>
+
+</android.support.design.internal.ForegroundLinearLayout>

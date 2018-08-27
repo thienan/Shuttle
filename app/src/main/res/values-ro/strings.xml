@@ -4,7 +4,6 @@
     <!-- Shown when a user attempts to edit tags, but they don't have a 'DocumentProvider' available to pick the directory of their music (and thus give permission to Shuttle)-->
     <string name="R.string.toast_no_document_provider">Niciun DocumentProvider disponibil pentru preluarea solicitării</string>
     <!-- Displayed when an M3U playlist is being saved, but it already exists -->
-    <string name="playlist_save_exists">Playlistul există deja</string>
     <!-- Displayed when an M3U playlist save fails -->
     <string name="playlist_save_failed">Nu se poate salva playlist-ul</string>
     <!-- Displayed when an M3U playlist is saved, %s will be the path -->
@@ -44,16 +43,6 @@
     </plurals>
     <!-- Toast after selecting an empty playlist -->
     <string name="emptyplaylist">Playlist-ul este gol.</string>
-    <!-- Used in sleep message. Example 2 hours (and) 5 minutes -->
-    <string name="and">" \u0219i "</string>
-    <!-- Alarm confirmation toast: singular hour -->
-    <string name="hour">" or\u0103"</string>
-    <!-- Alarm confirmation toast: plural hours -->
-    <string name="hours">" ore"</string>
-    <!-- Alarm confirmation toast: plural minutes -->
-    <string name="minutes">" minute"</string>
-    <!-- Alarm toast: Sleep timer set for -->
-    <string name="sleep_message">Cronometru setat pentru</string>
     <!-- -->
     <string name="initial_dir_set_message">" setat ca director ini\u021bial"</string>
     <!-- Transient popup message shown after deleting a playlist -->
@@ -61,11 +50,6 @@
     <!-- Transient popup message shown after renaming a playlist -->
     <string name="playlist_renamed_message">Playlist redenumit.</string>
     <!-- Toast confirming that song(s) was/were deleted. -->
-    <plurals name="NNNtracksdeleted">
-        <item quantity="one">1 melodie a fost ștearsă</item>
-        <item quantity="other"><xliff:g id="songs_to_delete">%d</xliff:g> melodii au fost șterse.</item>
-        <item quantity="few"><xliff:g id="songs_to_delete">%d</xliff:g> melodii au fost șterse.</item>
-    </plurals>
     <!-- -->
     <plurals name="NNNtrackstoqueue">
         <item quantity="one">1 melodie adăugată în lista de redare.</item>
@@ -75,22 +59,12 @@
             melodii adăugate în lista de redare.</item>
     </plurals>
     <!-- Toasts after adding song(s) to playlists -->
-    <plurals name="NNNtrackstofavourites">
-        <item quantity="one">1 melodie adăugate la favorite.</item>
-        <item quantity="other"><xliff:g id="number" example="27">%d</xliff:g> melodii adăugate la favorite.</item>
-        <item quantity="few"><xliff:g id="number" example="27">%d</xliff:g> melodii adăugate la favorite.</item>
-    </plurals>
     <!-- ## Dialogs ## -->
-    <!-- Displays when a restart is required due to a change (themes etc) -->
-    <string name="restart_tite">Repornire necesară</string>
-    <!-- Displays when a restart is required due to a change (themes etc) -->
-    <string name="restart_message">Aceste schimbări nu vor lua loc pând când vei reporni Shuttle</string>
     <!-- Restart now button -->
     <string name="restart_button">Repornește acum</string>
     <!-- Displays when picking a theme color -->
     <string name="color_pick">Alege o culoare</string>
     <!-- Displayed in the color picker dialog, to choose a 'custom' color -->
-    <string name="dialog_custom">Personalizat</string>
     <!-- Displays when sharing a file fails -->
     <string name="share_failed">Ne pare rău, acest fișier nu a putut fi distribuit</string>
     <!-- Displays when you click 'share' -->
@@ -125,8 +99,6 @@
 \nSuport pentru ChromeCast
 \n\nÎn plus, ajută la promovarea dezvoltării ulterioare!
 \n\nNu trebuie să faci upgrade dacă ai deja Shuttle+</string>
-    <string name="get_pro_button_play_store">Magazin Play</string>
-    <string name="get_pro_button_amazon">Amazon</string>
     <string name="btn_upgrade">Actualizează</string>
     <!-- -->
     <string name="get_pro_button_no">Nu mulțumesc</string>
@@ -143,6 +115,8 @@
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Întregul album „<xliff:g id="album">%s</xliff:g>” va fi șters permanent.</string>
     <!-- Delete confirmation dialog message when deleting albums -->
+    <string name="get_pro_button_play_store">Magazin Play</string>
+    <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Urmăroarele albume vor fi șterse permanent: <xliff:g id="album">%s</xliff:g>.</string>
     <!-- Delete confirmation dialog when deleting a single song -->
     <string name="delete_song_desc">„<xliff:g id="song">%s</xliff:g>” va fi șters permanent.</string>
@@ -158,8 +132,6 @@
     <string name="delete_file_confirmation_dialog">Ești sigur că vrei să ștergi permanent „<xliff:g id="file">%s</xliff:g>”</string>
     <!-- Displayed when user presses 'delete artwork' -->
     <string name="delete_artwork_confirmation_dialog">Ești sigur că vrei să ștergi permanent toate coperțile din dispozitiv?</string>
-    <!-- QuickLyric button -->
-    <string name="quicklyric">QuickLyric</string>
     <!--"Set Ringtone" title -->
     <string name="dialog_title_set_ringtone">Setează tonul de apel</string>
     <!-- "Set Ringtone" message -->
@@ -188,17 +160,16 @@
     <string name="fav_add">Adaugă la favorite</string>
     <!-- Context menu item -->
     <string name="play_selection">Redă</string>
-    <!-- Context menu item -->
-    <string name="add_to_playlist">Adaugă în playlist</string>
+    <!-- Menu item-->
+    <!-- Multi select menu item-->
+    <!-- Multi select menu item-->
+    <!-- Artist overflow menu item-->
     <!-- Context menu item -->
     <string name="new_playlist">Nou</string>
-    <!-- Button for lyrics -->
-    <string name="lyrics">Versuri</string>
     <!-- menu item to save the current list as a new playlist -->
     <string name="save_as_playlist">Salvează ca playlist</string>
     <!-- Context menu item to remove the selected item from the playlist -->
-    <string name="remove_from_playlist">Elimină din playlist</string>
-    <!-- Context menu item to remove the selected item from the playlist -->
+    <!-- Context menu item to remove the selected item from the queue -->
     <string name="remove_from_queue">Șterge din lista de redare</string>
     <!-- Context menu item -->
     <string name="play_next">Următoarea melodie</string>
@@ -209,11 +180,8 @@
     <!-- -->
     <string name="library_title">Bibliotecă</string>
     <!-- -->
-    <string name="share_title">Distribuie</string>
     <!-- Library screen, menu item -->
     <string name="search_title">Caută</string>
-    <!-- Playlist context menu item to delete the selected playlist. -->
-    <string name="delete_playlist_menu">Șterge</string>
     <!-- Playlist context menu item to clear the selected playlist. -->
     <string name="clear_playlist_menu">Golește</string>
     <!-- Playlist context menu item to edit the selected playlist -->
@@ -228,8 +196,6 @@
     <string name="nowplaying_title">Redare actuală</string>
     <!-- -->
     <string name="up_next_title">Urmează</string>
-    <!-- Context menu item -->
-    <string name="add_to_queue">Adaugă în lista de redare</string>
     <!-- Popup menu item -->
     <string name="go_to">Mergi la…</string>
     <!-- 'More' button -->
@@ -241,14 +207,11 @@
     <!-- Accessibility description 'close navigation drawer'-->
     <string name="navigation_drawer_close">Închide opțiunile de navigare</string>
     <!-- ## Preference Menu ## -->
-    <!--Settings title for white accent color) -->
-    <string name="pref_title_theme_white_accent">Folosește subliniere albă</string>
-    <!--Settings summary for white accent color-->
-    <string name="pref_summary_theme_white_accent">Folosește culoarea albă pentru toate culorile de subliniere, în afara celor care trebuie să fie vizibile (redarea aleatorie și repetarea au nevoie de altă culoare în afară de alb pentru a arăta că sunt activate).</string>
     <!--Settings category for 'navigation' items -->
     <string name="pref_category_navigation">Navigare</string>
     <!--Settings category for 'other' items -->
     <string name="pref_category_other">Alte</string>
+    <!--Settings category for 'playback' items -->
     <!--Settings title for opening the dialog to pick which categories are shown as tab headings -->
     <string name="pref_title_choose_tabs">Alege iteme pentru tab-uri</string>
     <!--Settings summary for opening the dialog to pick which categories are shown as tab headings -->
@@ -273,8 +236,6 @@
     <string name="pref_title_theme_dark">Închisă</string>
     <string name="pref_title_theme_light">Deschisă</string>
     <string name="pref_title_theme_black">Negru</string>
-    <!--Settings summary for the downloading more themes -->
-    <string name="pref_summary_get_pro_themes">Mai mult teme sunt disponibile în Shuttle+</string>
     <!--Settings title for whitelist/blacklist-->
     <string name="pref_title_blacklist">Listă neagră/albă</string>
     <!--Settings title for viewing blacklist-->
@@ -285,8 +246,6 @@
     <string name="pref_title_view_whitelist">Vezi/Editează lista albă</string>
     <!--Settings title for clearing whitelist-->
     <string name="pref_title_clear_whitelist">Golește</string>
-    <!--Settings title for clearing whitelist-->
-    <string name="pref_title_update_whitelist">Actualizează</string>
     <!-- Context menu item to remove the selected item from the blacklist -->
     <string name="pref_title_crop_album_art">Taie coperta albumului</string>
     <!--Settings message for cropping album art on the Playing Activity screen-->
@@ -385,9 +344,13 @@
     <!-- Settings summary for downloading the Simple Last.fm scrobbler  -->
     <string name="pref_summary_simple_download">Descarcă Simple Last.FM Scrobbler de pe Magazinul Google Play</string>
     <!-- Settings title for the About heading -->
-    <string name="pref_title_about">Schimbări</string>
     <!-- Settings title for the Support heading -->
     <string name="pref_title_support">Asistență</string>
+    <!-- Settings title for toggling between remaining time and total time -->
+    <!-- Settings summary for toggling between remaining time and total time -->
+    <!-- Settings title for the playback options -->
+    <!-- Settings title for toggling 'remember shuff'e-->
+    <!-- Settings summary for toggling 'remember shuff'e-->
     <string name="pref_title_version">Versiunea</string>
     <string name="pref_title_faq">Întrebări Frecvente</string>
     <string name="pref_summary_faq">Ai o întrebare? Ai nevoie de ajutor? Click aici pentru a vedea întrebările frecvente pe www.shuttlemusicplayer.com</string>
@@ -436,8 +399,7 @@
     <!-- Button text for saving tags  -->
     <string name="save">Salvează</string>
     <!-- Message displayed when tag editing fails -->
-    <string name="tag_error_lollipop">A apărut o eroare la editarea tag-urilor. Dacă fișierul este stocat pe un card SD, Shuttle s-ar putea să nu aibă acces la el.</string>
-    <string name="tag_error_kitkat">A apărut o eroare la editarea tag-urilor. Fișierul este stocat pe un card SD? Dacă da, Google a făcut editarea tag-urilor imposibilă pentru acest fișier.</string>
+    <string name="tag_error">A apărut o eroare la editarea tag-urilor.</string>
     <string name="tag_editor_document_tree_message">Din cauza schimbărilor în Android 5.0, trebuie să specifici ce foldere de pe cardul SD poate edita o aplicație.\n\nShuttle va deschide acum un „file picker”. Alege folderul-părinte a fișierelor pe care vrei să le modifici.</string>
     <string name="tag_editor_check_permission">Se verifică permisiunile. S-ar putea să dureze puțin...\n\nDă vina pe Google!</string>
     <string name="tag_editor_document_tree_permission_failed">Se pare că Shuttle încă nu are permisiunea de a edita fișierele. Verifică din nou folderul din „file picker”</string>
@@ -446,6 +408,7 @@
     <string name="rename_folder">Redenumește folder-ul</string>
     <!-- -->
     <string name="rename_file">Redenumește fișierul</string>
+    <!-- -->
     <!-- Menu option to save current folder as initial (starting) directory -->
     <string name="set_initial_dir">Setează ca director inițial</string>
     <!-- Label in folder view - number of folders within the current folder -->
@@ -462,6 +425,7 @@
     <string name="parent_folder">Folder-ul Părinte</string>
     <!-- -->
     <string name="show_filenames">Arată numele fișierelor</string>
+    <!-- -->
     <!-- 'Scan'-->
     <string name="scan_file">Scanează</string>
     <!-- Scan Complete-->
@@ -502,9 +466,6 @@
     <string name="genre_title">Gen</string>
     <!-- Album artist (singular)-->
     <string name="album_artist_title">Artistul albumului</string>
-    <!-- ## Lyrics ## -->
-    <!-- -->
-    <string name="no_lyrics">Nu s-au găsit versuri incorporate</string>
     <!-- ## Equalizer ## -->
     <!-- Menu item to open the equalizer -->
     <string name="equalizer">Egalizator</string>
@@ -552,14 +513,18 @@
     <string name="sort_files_album_name">Numele albumului</string>
     <string name="sort_files_track_name">Numele piesei</string>
     <!-- ## Sleep Timer ## -->
-    <!-- Options Menu - Sleep Timer Title -->
-    <string name="timer">Cronometru</string>
-    <!-- -->
+    <!-- Sleep timer title -->
+    <!--Sleep timer "Play last song to end" -->
     <string name="sleep_timer_play_to_end">Redă ultima melodie pentru a sfârși</string>
-    <!-- Sleep timer "set" -->
-    <string name="timer_set">Setează</string>
-    <!-- Sleep timer "set" -->
-    <string name="timer_stop">Oprește</string>
+    <!-- Sleep timer "Stop" -->
+    <!-- Sleep timer stop message "Stop sleep timer?" -->
+    <!-- Toast when sleep timer is set -->
+    <!-- Sleep timer "Set minutes..." -->
+    <!-- Sleep timer "5 minutes" -->
+    <!-- Sleep timer "15 minutes" -->
+    <!-- Sleep timer "30 minutes" -->
+    <!-- Sleep timer "1 hour" -->
+    <!-- Sleep timer label "Minutes" (limited space here) -->
     <!-- Button name in time span picker -->
     <string name="button_done">Gata</string>
     <!-- Title of time span picker -->
@@ -616,31 +581,21 @@
     <string name="suggested_recent_subtitle">Albume redate recent</string>
     <!-- Shows when multiple items are selected after-long pressing-->
     <!-- ## Unknown artist/album metadata ##-->
-    <!-- Default name of artist that doesn't have a name in the metadata -->
-    <string name="unknown_artist_name">Artist necunoscut</string>
-    <!-- Default name of album artist that doesn't have a name in the metadata -->
-    <string name="unknown_album_name">Album necunoscut</string>
-    <!-- Default name of genre that doesn't have a name in the metadata -->
-    <string name="unknown_genre_name">Gen necunoscut</string>
-    <!-- Default name of album artist that doesn't have a name in the metadata -->
-    <string name="unknown_album_artist_name">Artist album necunoscut</string>
-    <!-- Song Info overflow option-->
+    <!-- Default value if album year unknown -->
+    <!-- Song info overflow option-->
     <string name="song_info">Informații melodie</string>
     <!-- Artwork Download Service Label-->
     <string name="download_service">Serviciul de descărcare</string>
-    <!-- ## Better Pickers Strings ## -->
-    <string name="picker_set">OK</string>
-    <string name="timer_delete">Șterge</string>
-    <string name="time_picker_time_seperator">:</string>
     <!-- Accessibility button description -->
     <string name="btn_play">Redă/pauză</string>
+    <!-- Accessibility button description -->
     <!-- Accessibility button description -->
     <!-- Accessibility button description -->
     <string name="btn_skip">Sari</string>
     <!-- Accessibility button description -->
     <string name="btn_prev">Precedent</string>
     <!-- Accessibility button description -->
-    <string name="btn_queue">Vezi lista de redare</string>
+    <!-- Accessibility button description -->
     <!-- Accessibility overflow button. Example: "<Spice Girls> options"-->
     <!-- Accessibility button description -->
     <!-- Accessibility button description -->
@@ -681,8 +636,20 @@
     <!-- "Folders" Shortcut label. Max 10 characters.-->
     <!-- "Folders" Shortcut long label. Max 25 characters.-->
     <!-- "Folders" Shortcut label disabled. (I don't think this ever happens)-->
+    <!-- Displayed in list of songs for multi-disc album. E.g "Disc 1)-->
+    <!-- Search Filter-->
+    <!-- Changelog -->
+    <!-- Lyrics -->
+    <!-- QuickLyric button -->
+    <string name="quicklyric">QuickLyric</string>
+    <!-- Button for lyrics -->
+    <string name="lyrics">Versuri</string>
+    <!-- Shown when there are no lyrics -->
+    <string name="no_lyrics">Nu s-au găsit versuri incorporate</string>
+    <!-- QuickLyric info dialog message-->
     <!-- "Playlist" Shortcut label. Max 10 characters.-->
     <!-- "Playlist" Shortcut long label. Max 25 characters.-->
     <!-- "Playlist" Shortcut label disabled. Possibly shows if the playlist has been deleted.-->
-    <!-- Displayed in list of songs for multi-disc album. E.g "Disc 1)-->
+    <!-- Displayed at the top of the album list, album shuffle mode-->
+    <!-- Storage Access Framework (Used when deleting files from SD CarD)-->
 </resources>

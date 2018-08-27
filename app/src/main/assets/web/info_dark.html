@@ -8,6 +8,142 @@
 </head>
 
 <body>
+<h4>2.0.4</h4>
+<ul>
+    <li>Fixed a bug where 'play next' didn't work with songs on artist/album/playlist/genre screens</li>
+    <li>Added play next to multi-select menu</li>
+    <li>Added play next to overflow menu for artist, album, genre & playlist detail screens</li>
+    <li>Reinstated batch-delete from queue</li>
+    <li>Bumped minimum Android version to Lollipop (21)</li>
+    <li>Added a launch task which attempts fix the 'year' of songs/albums in the MediaStore, if the year is present in the id3/vorbis tags</li>
+    <li>Fixed an issue where some tasks started when the app is launching, instead of waiting a few seconds. (Improves launch time)</li>
+    <li>Fixed an issue where 'play next' on an item in the queue caused it to play after the next track</li>
+    <li>Use https for networking calls</li>
+    <li>Updated translations</li>
+</ul>
+<h4>2.0.3</h4>
+<ul>
+    <li>Reinstated SD card file deletion (Lollipop+)</li>
+    <li>Added ability to quickly set, remove, and navigate to a specified home directory when folder browsing</li>
+    <li>When a home directory is specified, the back button won't navigate past that directory</li>
+    <li>Fixed an issue where back button didn't work correctly when displaying folder browser in tabs</li>
+    <li>Added ability to batch remove songs from the queue</li>
+    <li>Fixed a bug causing the CAB (thingy that appears at the top of the screen when you long press stuff) to remain open after performing an action</li>
+    <li>Translation updates</li>
+    <li>Crash fixes</li>
+</ul>
+<h4>2.0.2</h4>
+<ul>
+    <li>Fixed an issue where playback randomly paused due to changes to nearby bluetooth devices</li>
+    <li>Fixed an issue where bitrate &amp; other song info didn't show up</li>
+    <li>Various crash fixes</li>
+</ul>
+<h4>2.0.1</h4>
+<ul>
+    <li>Lowered translation threshold. Translations need to be only 70% complete to make it into Shuttle.
+        </p>
+        </p>
+        Calling all translators: <a href="https://www.shuttle.oneskyapp.com">Shuttle Translations</a> </li>
+    <li>Various crash fixes</li>
+</ul>
+<h4>2.0.0</h4>
+<h5>
+    Features:
+</h5>
+<ul>
+    <li>Show changelog on launch</li>
+    <li>Dynamic themes!</li>
+    <li>Added album-shuffle (thanks Will Coughlin)</li>
+    <li>Added a display option to show remaining time (thanks lastbulletbender)</li>
+    <li>Added multi-select to artist/album/playlist/genre detail screens & search screen</li>
+    <li>Added 'share' option to now playing screen menu items</li>
+    <li>Added 'go to genre' option to now playing screen</li>
+    <li>Added more playlist menu options to playlist detail screen</li>
+    <li>Shuffle now turns off when a new list of songs is added to the queue. This can be disabled in playback settings</li>
+    <li>Remember playlist sorting per-playlist</li>
+</ul>
+
+<h5>
+    UI changes:
+</h5>
+<ul>
+    <li>Major theming overhaul. More stuff is themed correctly now</li>
+    <li>App theme now matches the current artwork. This can be set to only occur on the 'now playing' screen, or turned off in settings</li>
+    <li>Redesigned artist/album/genre/playlist 'detail' screen.</li>
+    <li>Toolbar now collapses when scrolling</li>
+    <li>'Up Next' now slides up from now-playing</li>
+    <li>Artwork is now full-bleed to the top of the screen</li>
+    <li>Overhauled landscape mode</li>
+    <li>Album count shown for artists</li>
+    <li>Song count shown for albums</li>
+    <li>Settings has had a facelift</li>
+    <li>Moved Equaliser &amp; Sleep Timer to Navigation Drawer</li>
+    <li>Sleep timer now displays time remaining in drawer when active</li>
+    <li>Lyrics are now displayed in their own popup, instead of on top of the artwork</li>
+    <li>Close Voice Search screen if no results are found</li>
+</ul>
+
+<h5>
+    Code improvements:
+</h5>
+<ul>
+    <li>Major redesign of many aspects of the codebase</li>
+    <li>Overhauled theming engine</li>
+    <li>Migrated to RxJava 2</li>
+    <li>Removed lots of old, unused resources - smaller app size, easier to maintain</li>
+    <li>Reduce the number of SQL queries being performed, particularly during launch</li>
+</ul>
+
+<h5>
+    Bug fixes:
+</h5>
+<ul>
+    <li>Fixed an issue where 'play next' created a duplicate when used from now-playing queue</li>
+    <li>Fixed an issue where playback didn't stop when disconnecting from bluetooth</li>
+    <li>Fixed various tag editing issues</li>
+    <li>Work around a Last.FM issue to ensure artwork is high quality</li>
+    <li>Fixed crash when using gmail style placeholders</li>
+    <li>Fixed an issue where playing a song from a folder didn't enqueue the surrounding songs</li>
+    <li>Fixed some memory leaks (thanks Khang)</li>
+    <li>Lots and lots of other crash fixes</li>
+</ul>
+
+<h4>1.6.7</h4>
+<ul>
+    <li>Fixed an issue where enqueued songs were lost when changing shuffle mode</li>
+    <li>Fixed an issue where the folder scanner only scanned songs already available in the MediaStore (didn't find new music)</li>
+    <li>Fixed an issue preventing albums & songs showing up in album, artist & genre detail screens</li>
+    <li>Close drawer when back button is pressed</li>
+    <li>Reduced 'most played' playlist to 20 most played songs. Only count songs with 2 or more plays.</li>
+    <li>Fixed crash when adding apostrophe to playlist name</li>
+    <li>Fixed crash when attempting to edit tags</li>
+    <li>Various other crash fixes</li>
+</ul>
+<h4>1.6.6</h4>
+<ul>
+    <li>Reverted a change which caused compilation albums without 'album-artist' tags to be split up</li>
+</ul>
+<h4>1.6.5</h4>
+<ul>
+    <li>Show this changelog on startup (meta)</li>
+    <li>Fixed an issue with slow loading of library on some devices</li>
+    <li>Added back 'QuickLyric' button to lyrics screen</li>
+    <li>Fixed an issue where songs with no album tag information ended up being grouped under one artist</li>
+    <li>Search: Improved speed & accuracy of search results</li>
+    <li>Search: Fixed an issue where searching didn't work very well for songs/albums/artists with multiple words in the name</li>
+    <li>Search: Added option to remove artists & albums from search results</li>
+    <li>Search: Added option to disable fuzzy searching</li>
+    <li>Added accessibility content descriptions to notification buttons & widgets</li>
+    <li>Fixed an issue where the current playback position made available to 3rd party apps was incorrect after changing tracks</li>
+    <li>Fixed an issue with FAB position in artist/album detail screen on older devices</li>
+    <li>Fixed an issue where the artist/album list sometimes showed as a two-column grid</li>
+    <li>Fixed an issue where inverted notification icons weren't very visible on devices running API < 24</li>
+    <li>Fixed an issue with 'breadcrumbs' in Folder screen</li>
+    <li>Fixed an issue where the equalizer toggle didn't change color when set to 'off'</li>
+    <li>Fixed a crash when choosing to invert icons on API < 21. This feature is no longer available on such devices</li>
+    <li>Fixed several folder browser crashes</li>
+    <li>Various other crash fixes</li>
+</ul>
 <h4>1.6.4</h4>
 <ul>
     <li>Fixed a bug where choosing to play a song from the folder browser ended up playing the whole library (and related issues)</li>
@@ -851,6 +987,79 @@
 </ul>
 <h3>Licenses:</h3>
 <p>Shuttle+ uses the following open-source libraries:</p>
+<h4>RxBroadcast</h4>
+<pre>
+Copyright 2015 Adam Cantrowitz
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</pre>
+<h4>RxAndroid</h4>
+<pre>
+Copyright 2015 The RxAndroid authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</pre>
+<h4>Butterknife</h4>
+<pre>
+Copyright 2013 Jake Wharton
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</pre>
+<h4>Gradle Play Publisher</h4>
+<pre>
+The MIT License (MIT)
+
+Copyright (c) 2014 Christian Becker
+Copyright (c) 2014 Björn Hurling
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</pre>
 <h4>RxRelay</h4>
 <pre>
 Copyright 2014 Netflix, Inc.
@@ -917,20 +1126,6 @@ Copyright (c) 2012-2013 by Paul S. Hawke, 2001,2005-2013 by Jarno Elonen, 2010 b
 Neither the name of the NanoHttpd organization nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-<h4>BetterPickers</h4>
-<pre>
-Copyright 2013 Derek Brameyer
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 </pre>
 <h4>HoloColorPicker</h4>
 <pre>

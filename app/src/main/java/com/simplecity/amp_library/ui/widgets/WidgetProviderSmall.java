@@ -3,6 +3,7 @@ package com.simplecity.amp_library.ui.widgets;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -55,13 +56,13 @@ public class WidgetProviderSmall extends BaseWidgetProvider {
         views.setViewVisibility(R.id.text1, View.GONE);
         views.setTextViewText(R.id.text2, res.getText(R.string.widget_initial_text));
 
-        int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, context.getResources().getColor(R.color.white));
-        views.setImageViewResource(R.id.next_button, R.drawable.ic_skip_white);
-        views.setImageViewResource(R.id.prev_button, R.drawable.ic_prev_white);
+        int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(context, R.color.white));
+        views.setImageViewResource(R.id.next_button, R.drawable.ic_skip_next_24dp);
+        views.setImageViewResource(R.id.prev_button, R.drawable.ic_skip_previous_24dp);
         views.setTextColor(R.id.text2, textColor);
         views.setTextColor(R.id.text1, textColor);
 
-        int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(context.getResources().getColor(R.color.white), 35 / 255f));
+        int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(context, R.color.white), 35 / 255f));
         views.setInt(R.id.widget_layout_small, "setBackgroundColor", backgroundColor);
         int colorFilter = mPrefs.getInt(ARG_WIDGET_COLOR_FILTER + appWidgetId, -1);
         if (colorFilter != -1) {
@@ -131,60 +132,35 @@ public class WidgetProviderSmall extends BaseWidgetProvider {
             final boolean isPlaying = service.isPlaying();
             if (isPlaying) {
                 if (invertIcons) {
-                    views.setImageViewBitmap(R.id.play_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_pause_white));
+                    views.setImageViewBitmap(R.id.play_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_pause_24dp));
                 } else {
-                    views.setImageViewResource(R.id.play_button, R.drawable.ic_pause_white);
+                    views.setImageViewResource(R.id.play_button, R.drawable.ic_pause_24dp);
                 }
             } else {
                 if (invertIcons) {
-                    views.setImageViewBitmap(R.id.play_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_play_white));
+                    views.setImageViewBitmap(R.id.play_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_play_24dp));
                 } else {
-                    views.setImageViewResource(R.id.play_button, R.drawable.ic_play_white);
+                    views.setImageViewResource(R.id.play_button, R.drawable.ic_play_24dp);
                 }
             }
 
-            switch (service.getShuffleMode()) {
-                case MusicService.ShuffleMode.OFF:
-                    if (invertIcons) {
-                        views.setImageViewBitmap(R.id.shuffle_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_shuffle_white));
-                    } else {
-                        views.setImageViewResource(R.id.shuffle_button, R.drawable.ic_shuffle_white);
-                    }
-                    break;
-                default:
-                    views.setImageViewBitmap(R.id.shuffle_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_shuffle_white));
-                    break;
-            }
+            setupShuffleView(service, views, invertIcons);
 
-            switch (service.getRepeatMode()) {
-                case MusicService.RepeatMode.ALL:
-                    views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_repeat_white));
-                    break;
-                case MusicService.RepeatMode.ONE:
-                    views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getColoredBitmap(service, R.drawable.ic_repeat_one_white));
-                    break;
-                default:
-                    if (invertIcons) {
-                        views.setImageViewBitmap(R.id.repeat_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_repeat_white));
-                    } else {
-                        views.setImageViewResource(R.id.repeat_button, R.drawable.ic_repeat_white);
-                    }
-                    break;
-            }
+            setupRepeatView(service, views, invertIcons);
 
-            int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, service.getResources().getColor(R.color.white));
+            int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(service, R.color.white));
             if (invertIcons) {
-                views.setImageViewBitmap(R.id.next_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_skip_white));
-                views.setImageViewBitmap(R.id.prev_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_prev_white));
+                views.setImageViewBitmap(R.id.next_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_skip_next_24dp));
+                views.setImageViewBitmap(R.id.prev_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_skip_previous_24dp));
             } else {
-                views.setImageViewResource(R.id.next_button, R.drawable.ic_skip_white);
-                views.setImageViewResource(R.id.prev_button, R.drawable.ic_prev_white);
+                views.setImageViewResource(R.id.next_button, R.drawable.ic_skip_next_24dp);
+                views.setImageViewResource(R.id.prev_button, R.drawable.ic_skip_previous_24dp);
             }
 
             views.setTextColor(R.id.text2, textColor);
             views.setTextColor(R.id.text1, textColor);
 
-            int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(service.getResources().getColor(R.color.white), 35 / 255f));
+            int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(service, R.color.white), 35 / 255f));
             views.setInt(R.id.widget_layout_small, "setBackgroundColor", backgroundColor);
 
             setupButtons(service, views, appWidgetId, getRootViewId());
@@ -198,4 +174,5 @@ public class WidgetProviderSmall extends BaseWidgetProvider {
             pushUpdate(service, appWidgetId, views);
         }
     }
+
 }

@@ -1,107 +1,161 @@
 package com.simplecity.amp_library.utils;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.CountDownTimer;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CheckBox;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.doomonafireball.betterpickers.hmspicker.HmsPicker;
-import com.doomonafireball.betterpickers.hmspicker.HmsView;
 import com.simplecity.amp_library.R;
+import com.simplecity.amp_library.rx.UnsafeAction;
 
-/**
- * Puts the music to sleep after a given amount of time
- */
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.subjects.BehaviorSubject;
+
 public final class SleepTimer {
 
-    private static final String FONT = "fonts/AndroidClockMono-Thin.ttf";
+    private static final String TAG = "SleepTimer";
 
-    public SleepTimer() {
+    private static SleepTimer instance;
+
+    private boolean isActive;
+
+    public boolean playToEnd = false;
+
+    private int timeRemaining = 0;
+
+    private Flowable<Long> currentTimeObservable;
+
+    private BehaviorSubject<Boolean> timerActiveObservable;
+
+    public static SleepTimer getInstance() {
+        if (instance == null) {
+            instance = new SleepTimer();
+        }
+        return instance;
     }
 
-    /**
-     * Constructor for <code>SleepTimer</code>
-     *
-     * @param context   The {@link Activity} to use
-     * @param active    True if the timer is active, false otherwise
-     * @param remaining The remaining time of the current track
-     */
-    public static void createTimer(final Context context, boolean active, final long remaining) {
+    private SleepTimer() {
 
-        final View view = LayoutInflater.from(context).inflate(R.layout.dialog_timer, null);
-        final HmsPicker hmsPicker = (HmsPicker) view.findViewById(R.id.hms_picker);
-        final HmsView hmsView = (HmsView) view.findViewById(R.id.hms_view);
+        timerActiveObservable = BehaviorSubject.create();
 
-        ThemeUtils.themeHmsPicker(hmsPicker);
-        ThemeUtils.themeHmsView(hmsView);
+        currentTimeObservable = timerActiveObservable
+                .doOnNext(isActive -> this.isActive = isActive)
+                .switchMap(ignored -> Observable
+                        .interval(1, TimeUnit.SECONDS)
+                        .filter(aLong -> isActive)
+                        .map(time -> timeRemaining - time)
+                        .distinctUntilChanged()
+                        .skip(1)
+                        .doOnNext(aLong -> {
+                            if (aLong == -1) {
+                                stop();
+                            }
+                        }))
+                .toFlowable(BackpressureStrategy.LATEST)
+                .share();
+    }
 
-        final long timeMillis = remaining - System.currentTimeMillis();
-        final int minutes = (int) ((timeMillis / (1000 * 60)) % 60);
-        final int hours = (int) ((timeMillis / (1000 * 60 * 60)) % 24);
+    public Flowable<Long> getCurrentTimeObservable() {
+        return currentTimeObservable;
+    }
 
-        int minutesFirstDigit = 0;
-        int minuteSecondDigit = 0;
-        if (minutes > 0) {
-            minutesFirstDigit = minutes / 10;
-            minuteSecondDigit = minutes % 10;
-        }
-        hmsView.setTime(hours, minutesFirstDigit, minuteSecondDigit);
+    public BehaviorSubject<Boolean> getTimerActiveSubject() {
+        return timerActiveObservable;
+    }
 
-        final SharedPreferences mPrefs;
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+    public void start(int seconds, boolean playToEnd) {
+        this.timeRemaining = seconds;
+        this.playToEnd = playToEnd;
+        timerActiveObservable.onNext(true);
+    }
 
-        final CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-        checkBox.setChecked(mPrefs.getBoolean("sleep_timer_wait_til_end", true));
-        checkBox.setOnCheckedChangeListener((compoundButton, b) -> mPrefs.edit().putBoolean("sleep_timer_wait_til_end", b).apply());
+    public void stop() {
+        isActive = false;
+        timerActiveObservable.onNext(false);
+    }
 
-        final MaterialDialog.Builder builder = DialogUtils.getBuilder(context)
-                .customView(view, false)
-                .negativeText(R.string.close);
+    public MaterialDialog getDialog(Context context, UnsafeAction showMinutesPicker, UnsafeAction timerStarted) {
 
-        if (active) {
-            hmsView.setVisibility(View.VISIBLE);
-            hmsPicker.setVisibility(View.GONE);
-            builder.positiveText(R.string.timer_stop)
-                    .onPositive((materialDialog, dialogAction) -> MusicUtils.stopTimer());
+        if (isActive) {
+            return new MaterialDialog.Builder(context)
+                    .content(R.string.sleep_timer_stop_title)
+                    .positiveText(R.string.sleep_timer_stop_button)
+                    .negativeText(R.string.close)
+                    .onPositive((materialDialog, dialogAction) -> stop())
+                    .build();
         } else {
-            hmsView.setVisibility(View.GONE);
-            hmsPicker.setVisibility(View.VISIBLE);
-            builder.positiveText(R.string.timer_set)
-                    .onPositive((materialDialog, dialogAction) -> {
-                        if (hmsPicker.getTime() != 0) {
-                            MusicUtils.setTimer(hmsPicker.getTime() * 1000);
+            return new MaterialDialog.Builder(context)
+                    .title(R.string.sleep_timer)
+                    .items(R.array.timerValues)
+                    .checkBoxPromptRes(R.string.sleep_timer_play_to_end, false, (compoundButton, b) -> playToEnd = b)
+                    .itemsCallback((materialDialog, view, i, charSequence) -> {
+                        switch (i) {
+                            case 0:
+                                // 5 mins
+                                start(5 * 60, playToEnd);
+                                timerStarted.run();
+                                break;
+                            case 1:
+                                // 15 mins
+                                start(15 * 60, playToEnd);
+                                timerStarted.run();
+                                break;
+                            case 2:
+                                // 30 mins
+                                start(30 * 60, playToEnd);
+                                timerStarted.run();
+                                break;
+                            case 3:
+                                // 1 hour
+                                start(60 * 60, playToEnd);
+                                timerStarted.run();
+                                break;
+                            case 4:
+                                // Set time manually
+                                showMinutesPicker.run();
+                                break;
                         }
-                        hmsPicker.setVisibility(View.GONE);
-                        hmsView.setVisibility(View.VISIBLE);
-                    });
+                    }).build();
         }
-        builder.show();
-
-        new CountDownTimer(timeMillis, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                final long timeMillis = remaining - System.currentTimeMillis();
-                final int minutes = (int) ((timeMillis / (1000 * 60)) % 60);
-                final int hours = (int) ((timeMillis / (1000 * 60 * 60)) % 24);
-                int minutesFirstDigit = 0;
-                int minuteSecondDigit = 0;
-                if (minutes > 0) {
-                    minutesFirstDigit = minutes / 10;
-                    minuteSecondDigit = minutes % 10;
-                }
-                hmsView.setTime(hours, minutesFirstDigit, minuteSecondDigit);
-            }
-
-            @Override
-            public void onFinish() {
-
-            }
-        }.start();
     }
 
+    public void showMinutesDialog(Context context, UnsafeAction timerStarted) {
+
+        @SuppressLint("InflateParams")
+        View customView = LayoutInflater.from(context).inflate(R.layout.dialog_minutes_picker, null);
+
+        EditText editText = customView.findViewById(R.id.editText);
+
+        new MaterialDialog.Builder(context)
+                .title(R.string.sleep_timer_set_minutes)
+                .customView(customView, false)
+                .positiveText(R.string.button_ok)
+                .negativeText(R.string.cancel)
+                .autoDismiss(false)
+                .onPositive((materialDialog, dialogAction) -> {
+                    if (!TextUtils.isEmpty(editText.getText())) {
+                        start(Integer.parseInt(editText.getText().toString()) * 60, playToEnd);
+                        timerStarted.run();
+                        materialDialog.dismiss();
+                    }
+                })
+                .onNegative((materialDialog, dialogAction) -> {
+                    materialDialog.dismiss();
+                })
+                .show();
+
+        new Handler().post(() -> {
+            InputMethodManager inputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+        });
+    }
 }
